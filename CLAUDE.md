@@ -146,3 +146,10 @@ pytest
 - Estabilidad: se decide con la refrigerada; si no existe, con la ambiente. La congelada solo se informa. Se usa la del tipo de muestra del tubo del examen (amarillo/rojo: suero; celeste, verde, gris: plasma; lila: sangre total o plasma EDTA, que son lo mismo; si traen valores distintos se usa el más corto). Si no es claro: "consultar con el laboratorio".
 - Resultados: "la estabilidad lo permite", "al límite, consultar" (espera igual a la estabilidad, o estabilidad menor a un día) y "NO alcanza" (advertencia destacada, con sugerencia de días de toma en la próxima semana).
 - "Según demanda": el laboratorio procesa en tandas; no se sabe el día. No se da veredicto: se muestra el tiempo de respuesta y "consultar con el laboratorio si la estabilidad es corta".
+
+### Auditoría (decisiones, noviembre 2026)
+
+- Se registra una consulta cuando la enfermera ve el resumen de tubos: exámenes elegidos (no lo que escribe en el buscador), total y tubos en orden, punciones aparte, otras muestras, exámenes sin tubo y el veredicto de estabilidad de cada derivado. Recargar la pantalla con los mismos exámenes no duplica el registro.
+- Archivo semanal en CSV (`data/auditoria_<lunes>.csv`, separado por punto y coma). Se conserva como respaldo local después de enviarlo.
+- La app envía sola la auditoría de la semana anterior (lunes a domingo): lo revisa en cada consulta y, desde el lunes, la envía en segundo plano. Si el correo falla, no borra nada y reintenta más tarde. También existe el comando `flask --app app auditoria-semanal`.
+- Correo configurado en `.env` (no va a Git; ver `.env.example`). Por defecto en modo prueba: el correo se guarda como `.eml` en `data/` en vez de enviarse. Destinataria de prueba: la dueña del proyecto.

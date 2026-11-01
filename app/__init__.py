@@ -25,4 +25,11 @@ def create_app():
     from app.importador import comando_importar
     app.cli.add_command(comando_importar)
 
+    # Auditoría semanal: la app la envía sola cuando corresponde (ver auditoria.py).
+    # También se puede enviar a mano: flask --app app auditoria-semanal
+    from app.auditoria import comando_auditoria_semanal, revisar_envio_automatico
+    app.config["AUDITORIA_AUTOMATICA"] = os.environ.get("AUDITORIA_AUTOMATICA", "1") != "0"
+    app.before_request(lambda: revisar_envio_automatico(app))
+    app.cli.add_command(comando_auditoria_semanal)
+
     return app

@@ -48,6 +48,30 @@ def crear_tablas(conexion):
             examenes_cargados  INTEGER NOT NULL,
             observaciones      INTEGER NOT NULL      -- cantidad de avisos del reporte de revisión
         );
+
+        -- Auditoría: un registro por cada resumen de tubos entregado.
+        -- Nunca se guarda ningún dato del paciente.
+        CREATE TABLE IF NOT EXISTS auditoria (
+            id                 INTEGER PRIMARY KEY,
+            fecha_hora         TEXT NOT NULL,        -- "2026-11-09 10:30:00"
+            enfermera          TEXT NOT NULL,        -- nombre y apellido
+            examenes           TEXT NOT NULL,        -- exámenes elegidos
+            total_tubos        INTEGER NOT NULL,
+            tubos_en_orden     TEXT NOT NULL,
+            punciones_aparte   TEXT NOT NULL,
+            otras_muestras     TEXT NOT NULL,
+            sin_tubo           TEXT NOT NULL,
+            derivados          TEXT NOT NULL         -- veredicto de estabilidad de cada derivado
+        );
+
+        -- Envíos semanales de la auditoría ya realizados
+        CREATE TABLE IF NOT EXISTS envios_auditoria (
+            id                 INTEGER PRIMARY KEY,
+            semana_inicio      TEXT NOT NULL UNIQUE, -- lunes de la semana enviada
+            fecha_envio        TEXT NOT NULL,
+            archivo            TEXT NOT NULL,
+            registros          INTEGER NOT NULL
+        );
     """)
 
     # Bases creadas antes de existir la columna "tubos": se agrega vacía

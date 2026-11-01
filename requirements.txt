@@ -7,3 +7,5 @@ pytest==8.4.2
 rapidfuzz==3.14.6
 # Feriados de Chile: los laboratorios externos no reciben muestras en feriados
 holidays==0.107
+# Lee la configuración del correo de auditoría desde el archivo .env (que no va a Git)
+python-dotenv==1.1.1

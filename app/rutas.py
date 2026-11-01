@@ -8,6 +8,7 @@ from flask import (Blueprint, current_app, jsonify, redirect, render_template,
                    request, session, url_for)
 
 from app.agrupador import agrupar
+from app.auditoria import registrar
 from app.buscador import buscar, cargar_examenes, etiqueta_procesamiento, nombre_en_una_linea
 from app.derivaciones import revisar_derivaciones
 from app.modelos import conectar, crear_tablas
@@ -158,16 +159,24 @@ def tubos():
     """Paso 3: resumen de tubos en orden de extracción."""
     if "enfermera" not in session:
         return redirect(url_for("paginas.ingreso"))
+    ahora = datetime.now()
     with closing(abrir_base()) as conexion:
         seleccionados = leer_seleccionados(conexion)
-    # Sin exámenes elegidos no hay nada que mostrar
-    if not seleccionados:
-        return redirect(url_for("paginas.examenes"))
-    ahora = datetime.now()
+        # Sin exámenes elegidos no hay nada que mostrar
+        if not seleccionados:
+            return redirect(url_for("paginas.examenes"))
+        resumen = agrupar(seleccionados)
+        derivados = revisar_derivaciones(seleccionados, ahora)
+
+        # Auditoría: se registra el resultado entregado. Si se recarga la
+        # pantalla con los mismos exámenes, no se registra de nuevo.
+        if session.get("ultima_auditada") != session["seleccion"]:
+            registrar(conexion, session["enfermera"], seleccionados, resumen, derivados, ahora)
+            session["ultima_auditada"] = list(session["seleccion"])
+
     return render_template(
         "tubos.html", paso=3, enfermera=session["enfermera"],
-        resumen=agrupar(seleccionados),
-        derivados=revisar_derivaciones(seleccionados, ahora),
+        resumen=resumen, derivados=derivados,
         fecha=ahora.strftime("%d-%m-%Y %H:%M"),
     )
 
@@ -176,6 +185,7 @@ def tubos():
 def nueva_consulta():
     """Borra la selección de exámenes y vuelve al buscador."""
     session.pop("seleccion", None)
+    session.pop("ultima_auditada", None)
     return redirect(url_for("paginas.examenes"))
 
 
