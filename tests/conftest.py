@@ -29,7 +29,7 @@ def cargar_examenes_de_prueba(ruta_base):
             conexion.execute(
                 "INSERT INTO examenes (fila_origen, nombre, laboratorio, se_procesa_en_recinto, tubos, muestra) "
                 "VALUES (?, ?, ?, ?, ?, ?)",
-                (numero, nombre, laboratorio, en_recinto, tubos, "MUESTRA DE PRUEBA"),
+                (numero, nombre, laboratorio, en_recinto, tubos, "MUESTRA DE PRUEBA."),
             )
     conexion.close()
 

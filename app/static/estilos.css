@@ -290,6 +290,26 @@ a.boton-principal {
 .frase-listado { color: var(--texto-secundario); font-size: 16px; margin-top: 4px; }
 .etiqueta-seccion { background: #E9EEF1; color: #2B3A46; }
 
+/* Exámenes que se derivan */
+.datos-derivado {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  margin: 8px 0;
+}
+.datos-derivado dt { font-weight: 600; color: var(--texto-secundario); }
+.datos-derivado dd { margin: 0; }
+.veredicto { margin: 10px 0 6px; padding: 10px 14px; border-radius: 10px; }
+.veredicto-bien { background: #E3F1F1; color: #07504F; }
+.veredicto-aviso { background: var(--aviso-fondo); color: var(--aviso-texto); }
+.veredicto-alerta, .alerta {
+  background: #FDE7E6;
+  color: #8A1C17;
+  border: 2px solid #C8322B;
+}
+.alerta { padding: 14px 16px; border-radius: 10px; margin: 0 0 16px; }
+.derivado-no_alcanza { border: 2px solid #C8322B; }
+
 /* Muestra de color de la tapa: es solo un apoyo, el nombre del tubo siempre va en texto */
 .tubo-color {
   width: 22px;

@@ -135,3 +135,14 @@ pip install -r requirements.txt
 flask --app app run --debug    # abre http://127.0.0.1:5000
 pytest
 ```
+
+### Derivaciones y estabilidad (definidas por el tecnólogo médico, noviembre 2026)
+
+- Enfermería no almacena muestras: las toma y las envía. El día de envío es tarea del laboratorio. A la enfermera se le muestra si la estabilidad alcanza hasta el día de proceso del laboratorio externo; si no alcanza, el laboratorio rechazaría la muestra.
+- El día de toma es automáticamente la fecha y hora de la consulta.
+- Recepción en Vespucio: si la consulta es antes de las 15:00 cuenta ese día; después, el día siguiente. La espera se cuenta en días desde la recepción hasta el día de proceso (es una estimación).
+- El laboratorio externo procesa el mismo día solo si la muestra llega antes de las 8:00; si no, en su siguiente día de proceso.
+- Los laboratorios externos no reciben en feriados de Chile (librería `holidays`). Vespucio trabaja 24/7, también en feriados.
+- Estabilidad: se decide con la refrigerada; si no existe, con la ambiente. La congelada solo se informa. Se usa la del tipo de muestra del tubo del examen (amarillo/rojo: suero; celeste, verde, gris: plasma; lila: sangre total o plasma EDTA, que son lo mismo; si traen valores distintos se usa el más corto). Si no es claro: "consultar con el laboratorio".
+- Resultados: "la estabilidad lo permite", "al límite, consultar" (espera igual a la estabilidad, o estabilidad menor a un día) y "NO alcanza" (advertencia destacada, con sugerencia de días de toma en la próxima semana).
+- "Según demanda": el laboratorio procesa en tandas; no se sabe el día. No se da veredicto: se muestra el tiempo de respuesta y "consultar con el laboratorio si la estabilidad es corta".

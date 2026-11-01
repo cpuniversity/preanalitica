@@ -187,8 +187,14 @@ def test_pantalla_de_tubos_agrupa_y_ordena(cliente_con_examenes):
     # El amarillo va antes que el lila (CLSI)
     assert html.index("Tubo amarillo con gel") < html.index("Tubo lila (EDTA)")
     assert "Otras muestras" in html and "ORINA COMPLETA" in html
+    # La muestra de prueba termina en punto: se muestra sin él
+    assert "MUESTRA DE PRUEBA</div>" in html
     assert "Tubo: dato no disponible" in html and "EXAMEN SIN LABORATORIO" in html
     assert "Imprimir resumen" in html
+    # Ferritina y ácido fólico se derivan: aparecen en su sección.
+    # Sus datos de prueba no traen día de proceso, así que se avisa.
+    assert "Exámenes que se derivan" in html
+    assert "Día de proceso: dato no disponible." in html
 
 
 def test_nueva_consulta_borra_la_seleccion(cliente_con_examenes):

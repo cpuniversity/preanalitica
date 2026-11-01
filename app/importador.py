@@ -13,6 +13,7 @@ import click
 from flask import current_app
 from flask.cli import with_appcontext
 
+from app.derivaciones import leer_dias_proceso
 from app.modelos import conectar, crear_tablas
 from app.texto import normalizar
 from app.tubos import (OTRA_MUESTRA, FormatoDeTuboInvalido, clasificar, leer_tubos,
@@ -223,6 +224,9 @@ def revisar(examenes):
         if examen["laboratorio"] and not examen["se_procesa_en_recinto"]:
             if not examen["dias_proceso"]:
                 observaciones.append((fila, nombre, "Se deriva y el día de proceso no está disponible"))
+            elif leer_dias_proceso(examen["dias_proceso"]) is None:
+                dias = " ".join(examen["dias_proceso"].split())
+                observaciones.append((fila, nombre, f"Día de proceso no se entiende: «{dias}»"))
             if not examen["estabilidad"]:
                 observaciones.append((fila, nombre, f"Estabilidad: {DATO_NO_DISPONIBLE}"))
 

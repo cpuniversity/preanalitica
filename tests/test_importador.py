@@ -183,6 +183,12 @@ def test_nombre_de_menos_de_3_caracteres_se_avisa(ruta):
     assert lista == ["Nombre de menos de 3 caracteres: revisar si es un examen"]
 
 
+def test_dia_de_proceso_que_no_se_entiende_se_avisa(ruta):
+    lista = problemas(ruta, [examen("EXAMEN PRUEBA UNO", laboratorio="Laboratorio Externo Prueba",
+                                    dias="SIN DIA ESPECIFICO", instrucciones="Estabilidad: 7 días")])
+    assert "Día de proceso no se entiende: «SIN DIA ESPECIFICO»" in lista
+
+
 def test_nombre_repetido_se_avisa(ruta):
     lista = problemas(ruta, [examen("EXAMEN PRUEBA UNO"), examen("Examen Prueba Uno")])
     assert lista == ["Nombre repetido (también en la fila 4)"]

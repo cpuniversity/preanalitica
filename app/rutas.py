@@ -9,6 +9,7 @@ from flask import (Blueprint, current_app, jsonify, redirect, render_template,
 
 from app.agrupador import agrupar
 from app.buscador import buscar, cargar_examenes, etiqueta_procesamiento, nombre_en_una_linea
+from app.derivaciones import revisar_derivaciones
 from app.modelos import conectar, crear_tablas
 
 paginas = Blueprint("paginas", __name__)
@@ -81,7 +82,8 @@ def leer_seleccionados(conexion):
     seleccionados = []
     for id_examen in session.get("seleccion", []):
         fila = conexion.execute(
-            "SELECT id, nombre, laboratorio, se_procesa_en_recinto, muestra, instrucciones, tubos "
+            "SELECT id, nombre, laboratorio, se_procesa_en_recinto, muestra, instrucciones, tubos, "
+            "dias_proceso, tiempo_respuesta, estabilidad "
             "FROM examenes WHERE id = ?",
             (id_examen,),
         ).fetchone()
@@ -161,10 +163,12 @@ def tubos():
     # Sin exámenes elegidos no hay nada que mostrar
     if not seleccionados:
         return redirect(url_for("paginas.examenes"))
+    ahora = datetime.now()
     return render_template(
         "tubos.html", paso=3, enfermera=session["enfermera"],
         resumen=agrupar(seleccionados),
-        fecha=datetime.now().strftime("%d-%m-%Y %H:%M"),
+        derivados=revisar_derivaciones(seleccionados, ahora),
+        fecha=ahora.strftime("%d-%m-%Y %H:%M"),
     )
 
 
