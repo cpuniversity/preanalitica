@@ -2,7 +2,7 @@
 
 import pytest
 
-from app.buscador import buscar, cargar_examenes, etiqueta_procesamiento, separar_palabras
+from app.buscador import buscar, cargar_examenes, etiqueta_procesamiento, preparar_examen
 from app.modelos import conectar
 from tests.conftest import cargar_examenes_de_prueba
 
@@ -64,8 +64,25 @@ def test_ordena_primero_lo_escrito_sin_error(examenes):
     assert nombres(buscar("glucosa", examenes)) == ["GLUCOSA", "GLUCOSA POST CARGA"]
 
 
+def test_sinonimo_entre_parentesis_cuenta_como_nombre_principal():
+    # Caso real: "glucosa" debe mostrar la glicemia, aunque haya muchos exámenes
+    # que empiezan con "GLUCOSA" y llenan la lista de 8 sugerencias
+    nombres_examenes = [
+        "GLUCOSA (EN LIQUIDOS)", "GLUCOSA POST ALMUERZO", "GLUCOSA POST DESAYUNO",
+        "GLUCOSA 6 FOSFATO DESHIDROGENASA", "GLUCOSA EN ORINA 24 HRS (GLUCOSURIA 24 HRS)",
+        "GLUCOSA EN ORINA AISLADA (GLUCOSURIA AISLADA)", "GLUCOSA TEST DE TOLERANCIA 2 MUESTRAS BASAL Y 120",
+        "GLUCOSA TEST DE TOLERANCIA 3 MUESTRAS BASAL 1 HORA Y 2 HRS", "GLUCOSA TEST DE TOLERANCIA PROLONGADO 5 MUESTRAS",
+        "GLICEMIA (GLUCOSA EN SANGRE)", "HORMONA DEL CRECIMIENTO POST ESTIMULO DE GLUCOSA",
+    ]
+    examenes = [preparar_examen({"nombre": n}) for n in nombres_examenes]
+    resultado = nombres(buscar("glucosa", examenes))
+    assert "GLICEMIA (GLUCOSA EN SANGRE)" in resultado
+    # Un examen que solo menciona glucosa en medio del nombre no sube
+    assert "HORMONA DEL CRECIMIENTO POST ESTIMULO DE GLUCOSA" not in resultado
+
+
 def test_letra_y_numero_con_o_sin_guion():
-    vitamina = [{"nombre": "VITAMINA B-12 (COBALAMINA)", "palabras": separar_palabras("VITAMINA B-12 (COBALAMINA)")}]
+    vitamina = [preparar_examen({"nombre": "VITAMINA B-12 (COBALAMINA)"})]
     assert nombres(buscar("b12", vitamina)) == ["VITAMINA B-12 (COBALAMINA)"]
     assert nombres(buscar("vitamina b-12", vitamina)) == ["VITAMINA B-12 (COBALAMINA)"]
 

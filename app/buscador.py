@@ -49,17 +49,25 @@ def etiqueta_procesamiento(examen):
     return {"tipo": "deriva", "texto": "Se deriva a " + nombre_en_una_linea(examen["laboratorio"])}
 
 
+def preparar_examen(examen):
+    """Agrega lo que el buscador necesita: las palabras del nombre y cómo empieza cada nombre.
+
+    Los sinónimos entre paréntesis cuentan como otro nombre del mismo examen:
+    "GLICEMIA (GLUCOSA EN SANGRE)" empieza con "glicemia" y también con "glucosa".
+    """
+    examen["nombre"] = nombre_en_una_linea(examen["nombre"])
+    examen["palabras"] = separar_palabras(examen["nombre"])
+    nombres = [examen["nombre"]] + re.findall(r"\(([^)]*)", examen["nombre"])
+    examen["comienzos"] = [separar_palabras(n)[0] for n in nombres if separar_palabras(n)]
+    return examen
+
+
 def cargar_examenes(conexion):
     """Lee los exámenes de la base y los prepara para buscar."""
-    examenes = []
-    for fila in conexion.execute(
-        "SELECT id, nombre, laboratorio, se_procesa_en_recinto FROM examenes"
-    ):
-        examen = dict(fila)
-        examen["nombre"] = nombre_en_una_linea(examen["nombre"])
-        examen["palabras"] = separar_palabras(examen["nombre"])
-        examenes.append(examen)
-    return examenes
+    return [
+        preparar_examen(dict(fila))
+        for fila in conexion.execute("SELECT id, nombre, laboratorio, se_procesa_en_recinto FROM examenes")
+    ]
 
 
 def puntaje_palabra(palabra_buscada, palabras_examen):
@@ -94,8 +102,8 @@ def buscar(consulta, examenes, maximo=MAXIMO_SUGERENCIAS):
         if min(puntajes) < PARECIDO_MINIMO:
             continue
         puntaje = sum(puntajes) / len(puntajes)
-        # Preferimos los exámenes cuyo nombre empieza con lo escrito
-        empieza_igual = examen["palabras"][0].startswith(palabras_buscadas[0])
+        # Preferimos los exámenes cuyo nombre (o un sinónimo) empieza con lo escrito
+        empieza_igual = any(comienzo.startswith(palabras_buscadas[0]) for comienzo in examen["comienzos"])
         encontrados.append((puntaje, empieza_igual, examen))
 
     # Orden: más puntaje, luego los que empiezan igual, luego los nombres más cortos
