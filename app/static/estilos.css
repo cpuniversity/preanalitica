@@ -131,9 +131,14 @@ h1 { font-size: 28px; font-weight: 600; margin: 0 0 4px; }
   padding: 0 16px;
   border: 2px solid var(--borde-campo);
   border-radius: 10px;
+  background: #FFFFFF;
   color: var(--texto);
   text-decoration: none;
+  /* Los <button> no heredan la letra de la página: hay que pedirlo */
+  font: inherit;
   font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
 }
 .boton-secundario:hover { border-color: var(--acento); color: var(--acento); }
 
@@ -211,7 +216,6 @@ h2 { font-size: 21px; font-weight: 600; margin: 0 0 16px; }
   border-bottom: 1px solid var(--borde-tarjeta);
 }
 .seleccionado-nombre { font-weight: 500; margin-bottom: 4px; }
-.seleccionados .boton-secundario { background: #FFFFFF; font: inherit; cursor: pointer; }
 
 /* El botón principal también puede ser un enlace */
 a.boton-principal {
@@ -221,9 +225,11 @@ a.boton-principal {
   text-decoration: none;
 }
 .boton-principal:disabled { background: var(--borde-campo); cursor: not-allowed; filter: none; }
-.boton-angosto { width: auto; padding: 0 28px; }
+.boton-angosto { width: auto; padding: 0 28px; white-space: nowrap; }
 
 .acciones { display: flex; gap: 12px; align-items: center; margin-top: 24px; }
+/* En la fila de acciones todos los botones tienen el mismo alto */
+.acciones .boton-secundario { height: 56px; padding: 0 24px; }
 
 /* ---------- Pantalla 3: Tubos ---------- */
 .resumen-encabezado {
