@@ -109,7 +109,10 @@ def leer_listado(ruta):
     for numero, fila in enumerate(filas[numero_titulos + 1:], start=numero_titulos + 2):
         examen = {"fila_origen": numero}
         for campo, posicion in posiciones.items():
-            examen[campo] = fila[posicion].strip() if posicion < len(fila) else ""
+            valor = fila[posicion] if posicion < len(fila) else ""
+            # Los saltos de línea de Windows (\r\n) se dejan como saltos simples (\n),
+            # por si el archivo se editó con el Bloc de notas
+            examen[campo] = valor.replace("\r\n", "\n").strip()
 
         # Fila totalmente vacía: se ignora
         if not any(examen[campo] for campo in TITULOS):

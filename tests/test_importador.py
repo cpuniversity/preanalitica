@@ -71,6 +71,14 @@ def test_ubica_columnas_por_titulo_aunque_cambie_el_orden(ruta):
     assert examenes[0]["codigo_vidalab"] == "999"
 
 
+def test_saltos_de_linea_de_windows_se_limpian(ruta):
+    # Al editar con el Bloc de notas, los saltos dentro de una celda pasan a ser \r\n
+    escribir_listado(ruta, [examen("EXAMEN PRUEBA UNO", instrucciones="Línea 1\r\nEstabilidad: 7 días")])
+    examenes, _ = leer_listado(ruta)
+    assert examenes[0]["instrucciones"] == "Línea 1\nEstabilidad: 7 días"
+    assert examenes[0]["estabilidad"] == "Estabilidad: 7 días"
+
+
 def test_falta_una_columna_y_se_detiene_con_mensaje_claro(ruta):
     titulos = [t for t in TITULOS if t != "Laboratorio"]
     escribir_listado(ruta, [], titulos)
