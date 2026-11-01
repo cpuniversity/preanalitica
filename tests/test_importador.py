@@ -29,7 +29,7 @@ ENCABEZADO_DOCUMENTO = [
 
 
 def examen(nombre, laboratorio="Laboratorio Clínica Dávila Vespucio", dias="LU A DO",
-           muestra="SANGRE, TUBO PRUEBA", instrucciones="", codigo_derivado="",
+           muestra="SANGRE, TUBO TAPA LILA 3 ML", instrucciones="", codigo_derivado="",
            codigo_vidalab="111", codigo_medisyn="222"):
     """Arma una fila del listado con datos inventados."""
     return [codigo_vidalab, codigo_medisyn, nombre, dias, "1", muestra,
@@ -202,29 +202,109 @@ def test_dos_codigos_en_una_celda_se_guarda_el_mayor(ruta):
 
 # ---------- Guardado en la base ----------
 
-def test_importar_guarda_en_la_base_y_escribe_reporte(ruta, tmp_path):
+@pytest.fixture
+def archivos(tmp_path):
+    """Base, reporte y tabla de tubos temporales."""
+    return {
+        "conexion": conectar(tmp_path / "prueba.db"),
+        "reporte": tmp_path / "reporte.csv",
+        "tabla": tmp_path / "tubos_por_revisar.csv",
+    }
+
+
+def importar_prueba(ruta, archivos):
+    return importar(ruta, archivos["conexion"], archivos["reporte"], archivos["tabla"])
+
+
+def test_importar_guarda_en_la_base_y_escribe_reporte(ruta, archivos):
     escribir_listado(ruta, [examen("EXAMEN PRUEBA UNO"), examen("EXAMEN PRUEBA DOS", muestra="")])
-    conexion = conectar(tmp_path / "prueba.db")
-    reporte = tmp_path / "reporte.csv"
 
-    resumen = importar(ruta, conexion, reporte)
+    resumen = importar_prueba(ruta, archivos)
 
-    assert resumen == {"examenes": 2, "en_recinto": 2, "observaciones": 1}
-    nombres = [f["nombre"] for f in conexion.execute("SELECT nombre FROM examenes ORDER BY id")]
-    assert nombres == ["EXAMEN PRUEBA UNO", "EXAMEN PRUEBA DOS"]
+    assert resumen == {"examenes": 2, "en_recinto": 2, "observaciones": 1, "tubo_no_reconocido": 1}
+    conexion = archivos["conexion"]
+    filas = conexion.execute("SELECT nombre, tubos FROM examenes ORDER BY id").fetchall()
+    assert [(f["nombre"], f["tubos"]) for f in filas] == [("EXAMEN PRUEBA UNO", "lila"), ("EXAMEN PRUEBA DOS", "")]
     assert conexion.execute("SELECT COUNT(*) FROM importaciones").fetchone()[0] == 1
-    assert "EXAMEN PRUEBA DOS" in reporte.read_text(encoding="utf-8-sig")
+    assert "EXAMEN PRUEBA DOS" in archivos["reporte"].read_text(encoding="utf-8-sig")
 
 
-def test_importar_dos_veces_reemplaza_los_examenes(ruta, tmp_path):
-    conexion = conectar(tmp_path / "prueba.db")
-    reporte = tmp_path / "reporte.csv"
-    importar(escribir_listado(ruta, [examen("EXAMEN PRUEBA UNO")]), conexion, reporte)
-    importar(escribir_listado(ruta, [examen("EXAMEN PRUEBA DOS")]), conexion, reporte)
+def test_importar_dos_veces_reemplaza_los_examenes(ruta, archivos):
+    importar_prueba(escribir_listado(ruta, [examen("EXAMEN PRUEBA UNO")]), archivos)
+    importar_prueba(escribir_listado(ruta, [examen("EXAMEN PRUEBA DOS")]), archivos)
 
+    conexion = archivos["conexion"]
     nombres = [f["nombre"] for f in conexion.execute("SELECT nombre FROM examenes")]
     assert nombres == ["EXAMEN PRUEBA DOS"]
     assert conexion.execute("SELECT COUNT(*) FROM importaciones").fetchone()[0] == 2
+
+
+# ---------- Tabla de tubos por revisar ----------
+
+def leer_tabla(ruta_tabla):
+    with open(ruta_tabla, encoding="utf-8-sig", newline="") as archivo:
+        return list(csv.DictReader(archivo, delimiter=";"))
+
+
+def completar_tabla(ruta_tabla, examen_nombre, valor):
+    """Simula al tecnólogo médico escribiendo el tubo correcto en la tabla."""
+    filas = leer_tabla(ruta_tabla)
+    for fila in filas:
+        if fila["Examen"] == examen_nombre:
+            fila["Tubo correcto (completar)"] = valor
+    with open(ruta_tabla, "w", encoding="utf-8-sig", newline="") as archivo:
+        escritor = csv.DictWriter(archivo, fieldnames=filas[0].keys(), delimiter=";")
+        escritor.writeheader()
+        escritor.writerows(filas)
+
+
+AMBIGUO = "SANGRE, TUBO AMARILLO O ROJO CON GEL 5 ML"
+
+
+def test_tubo_ambiguo_va_a_la_tabla_y_queda_no_disponible(ruta, archivos):
+    escribir_listado(ruta, [examen("EXAMEN PRUEBA UNO"), examen("EXAMEN PRUEBA DOS", muestra=AMBIGUO)])
+    importar_prueba(ruta, archivos)
+
+    filas = leer_tabla(archivos["tabla"])
+    assert [f["Examen"] for f in filas] == ["EXAMEN PRUEBA DOS"]
+    assert filas[0]["Tubos que menciona"] == "amarillo, rojo"
+    tubos = archivos["conexion"].execute("SELECT tubos FROM examenes WHERE nombre = 'EXAMEN PRUEBA DOS'").fetchone()[0]
+    assert tubos == ""
+
+
+def test_lo_que_completa_el_tecnologo_se_usa_y_se_conserva(ruta, archivos):
+    escribir_listado(ruta, [examen("EXAMEN PRUEBA DOS", muestra=AMBIGUO)])
+    importar_prueba(ruta, archivos)
+    completar_tabla(archivos["tabla"], "EXAMEN PRUEBA DOS", "amarillo o rojo")
+
+    importar_prueba(ruta, archivos)
+
+    tubos = archivos["conexion"].execute("SELECT tubos FROM examenes").fetchone()[0]
+    assert tubos == "amarillo o rojo"
+    # Al volver a importar, la tabla conserva lo que él escribió
+    assert leer_tabla(archivos["tabla"])[0]["Tubo correcto (completar)"] == "amarillo o rojo"
+
+
+def test_valor_no_reconocido_en_la_tabla_se_avisa(ruta, archivos):
+    escribir_listado(ruta, [examen("EXAMEN PRUEBA DOS", muestra=AMBIGUO)])
+    importar_prueba(ruta, archivos)
+    completar_tabla(archivos["tabla"], "EXAMEN PRUEBA DOS", "morado")
+
+    importar_prueba(ruta, archivos)
+
+    tubos = archivos["conexion"].execute("SELECT tubos FROM examenes").fetchone()[0]
+    assert tubos == ""
+    assert 'No se reconoce el tubo «morado»' in archivos["reporte"].read_text(encoding="utf-8-sig")
+
+
+def test_tecnologo_puede_marcar_otra_muestra(ruta, archivos):
+    escribir_listado(ruta, [examen("EXAMEN PRUEBA DOS", muestra=AMBIGUO)])
+    importar_prueba(ruta, archivos)
+    completar_tabla(archivos["tabla"], "EXAMEN PRUEBA DOS", "Otra muestra")
+
+    importar_prueba(ruta, archivos)
+
+    assert archivos["conexion"].execute("SELECT tubos FROM examenes").fetchone()[0] == "otra muestra"
 
 
 # ---------- Comando de terminal ----------

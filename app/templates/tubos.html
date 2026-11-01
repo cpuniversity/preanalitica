@@ -1,27 +1,135 @@
 {% extends "base.html" %}
 
-{% block contenido %}
-<section class="tarjeta">
-  <h1>Tubos</h1>
-  <p class="aviso">
-    La agrupación de tubos y el orden de extracción aún no están disponibles.
-    Por ahora solo se muestran los exámenes elegidos.
-  </p>
+{# Muestra la etiqueta de laboratorio (recinto / deriva / dato no disponible) #}
+{% macro etiqueta(e) %}<span class="etiqueta etiqueta-{{ e.tipo }}">{{ e.texto }}</span>{% endmacro %}
 
-  <h2>Exámenes elegidos ({{ seleccionados|length }})</h2>
-  <ul class="seleccionados">
-    {% for examen in seleccionados %}
+{# Lista de exámenes con sus advertencias, tal como las escribe el listado #}
+{% macro lista_examenes(examenes) %}
+  <ul class="tubo-examenes">
+    {% for examen in examenes %}
       <li>
-        <div>
-          <div class="seleccionado-nombre">{{ examen.nombre }}</div>
-          <span class="etiqueta etiqueta-{{ examen.etiqueta.tipo }}">{{ examen.etiqueta.texto }}</span>
-        </div>
+        {{ examen.nombre }}
+        {% for frase in examen.luz %}
+          <div class="frase-listado"><strong>Luz:</strong> «{{ frase }}»</div>
+        {% endfor %}
       </li>
     {% endfor %}
   </ul>
+{% endmacro %}
 
-  <div class="acciones">
+{% block contenido %}
+<section class="tarjeta resumen-tubos">
+  {# Encabezado que solo aparece al imprimir #}
+  <p class="solo-impresion">Preanalítica · {{ enfermera }} · {{ fecha }}</p>
+
+  <div class="resumen-encabezado">
+    <div>
+      <h1>Tubos para la toma de muestra</h1>
+      <p class="texto-secundario">Numerados en orden de extracción (CLSI).</p>
+    </div>
+    <div class="total-tubos">
+      <span class="total-numero">{{ resumen.total_tubos }}</span>
+      <span>{{ "tubo" if resumen.total_tubos == 1 else "tubos" }} en total</span>
+    </div>
+  </div>
+
+  {% if resumen.examenes_con_ayuno %}
+    <div class="aviso">
+      <strong>Ayuno: revise lo que indica el listado</strong>
+      <ul class="lista-avisos">
+        {% for examen in resumen.examenes_con_ayuno %}
+          <li><strong>{{ examen.nombre }}:</strong>
+            {% for frase in examen.ayuno %}«{{ frase }}» {% endfor %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  {% if resumen.sin_tubo %}
+    <div class="aviso">
+      <strong>Tubo: dato no disponible.</strong> Consulte con el laboratorio antes de tomar la muestra.
+      <ul class="lista-avisos">
+        {% for examen in resumen.sin_tubo %}
+          <li>{{ examen.nombre }} {{ etiqueta(examen.etiqueta) }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  {% if resumen.tubos %}
+    <ol class="tubos">
+      {% for tubo in resumen.tubos %}
+        <li class="tubo tubo-{{ tubo.tipo }}">
+          <span class="tubo-numero" aria-hidden="true">{{ tubo.numero }}</span>
+          <div class="tubo-detalle">
+            <div class="tubo-titulo">
+              <span class="tubo-color" aria-hidden="true"></span>
+              <span class="tubo-nombre">
+                <span class="lectores">Tubo número {{ tubo.numero }}: </span>
+                {% if tubo.cantidad > 1 %}{{ tubo.cantidad }} × {% endif %}{{ tubo.nombre_tubo }}
+              </span>
+            </div>
+            <div class="tubo-etiquetas">
+              {{ etiqueta(tubo.examenes[0].etiqueta) }}
+              {% if tubo.cantidad > 1 %}
+                <span class="etiqueta etiqueta-seccion">El laboratorio pide {{ tubo.cantidad }} tubos para este examen</span>
+              {% endif %}
+              {% if tubo.proteger_luz %}
+                <span class="etiqueta etiqueta-aviso">Proteger de la luz</span>
+              {% endif %}
+            </div>
+            {{ lista_examenes(tubo.examenes) }}
+          </div>
+        </li>
+      {% endfor %}
+    </ol>
+  {% endif %}
+
+  {% if resumen.punciones_aparte %}
+    <h2>Punción arterial aparte</h2>
+    <p class="texto-secundario">Fuera del orden de extracción venosa.</p>
+    <ul class="tubos">
+      {% for tubo in resumen.punciones_aparte %}
+        <li class="tubo tubo-{{ tubo.tipo }}">
+          <span class="tubo-numero" aria-hidden="true">A</span>
+          <div class="tubo-detalle">
+            <div class="tubo-titulo">
+              <span class="tubo-color" aria-hidden="true"></span>
+              <span class="tubo-nombre">{{ tubo.nombre_tubo }}</span>
+            </div>
+            <div class="tubo-etiquetas">{{ etiqueta(tubo.examenes[0].etiqueta) }}</div>
+            {{ lista_examenes(tubo.examenes) }}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  {% if resumen.otras_muestras %}
+    <h2>Otras muestras</h2>
+    <p class="texto-secundario">No son de sangre: no entran en el orden de extracción, pero deben tomarse igual.</p>
+    <ul class="tubos">
+      {% for examen in resumen.otras_muestras %}
+        <li class="tubo">
+          <span class="tubo-numero tubo-numero-otra" aria-hidden="true">•</span>
+          <div class="tubo-detalle">
+            <div class="tubo-nombre">{{ examen.nombre }}</div>
+            <div class="tubo-etiquetas">{{ etiqueta(examen.etiqueta) }}</div>
+            <div class="frase-listado"><strong>Muestra según el listado:</strong>
+              «{{ examen.muestra.split()|join(" ") if examen.muestra else "dato no disponible" }}»</div>
+            {% for frase in examen.luz %}
+              <div class="frase-listado"><strong>Luz:</strong> «{{ frase }}»</div>
+            {% endfor %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <div class="acciones no-imprimir">
     <a class="boton-secundario" href="{{ url_for('paginas.examenes') }}">Volver a exámenes</a>
+    <button class="boton-secundario" type="button" onclick="window.print()">Imprimir resumen</button>
     <form method="post" action="{{ url_for('paginas.nueva_consulta') }}">
       <button class="boton-principal boton-angosto" type="submit">Nueva consulta</button>
     </form>

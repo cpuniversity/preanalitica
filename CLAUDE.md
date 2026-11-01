@@ -52,6 +52,19 @@ Si algo no está en este documento, pregunta antes de implementarlo.
 - Los exámenes cuyo "Lab. Derivado" no es un número (por ejemplo "-" o "NOTA:") no se consideran en la app.
 - Si un examen derivado no tiene estabilidad en el listado, se muestra "dato no disponible".
 
+### Reglas de tubos (definidas por el tecnólogo médico, noviembre 2026)
+
+- "Tubo con gel" y "tapa amarilla" son el mismo tubo: amarillo con gel. El tubo rojo es distinto.
+- Comparten tubo solo los exámenes con el mismo tipo de tubo y el mismo laboratorio. Si deben procesarse en más de un laboratorio, van en tubos distintos.
+- Si un examen admite varios tubos, se elige el que permita juntarlo con otro examen; si ninguno lo permite, el primero (amarillo con gel antes que rojo).
+- Orden de extracción según CLSI: hemocultivo, celeste, amarillo con gel, rojo, verde, jeringa de gases venosos (junto al verde), lila, gris.
+- Gases arteriales: punción aparte, fuera del orden venoso. Hemocultivo y gases van en su propio contenedor (botella o jeringa).
+- Si el laboratorio pide 2 o más tubos para un examen, esos tubos son solo de ese examen (ej.: 2 celeste de un examen + 1 celeste de otro = 3 tubos).
+- Muestras que no son sangre: sección "Otras muestras", fuera del orden de extracción, sin quitarles importancia.
+- Protección de la luz: advertencia sobre el tubo, no tubo aparte. Hielo: no se muestra (lo maneja el laboratorio). Ayuno: advertencia.
+- Textos con indicación para adultos y pediátricos: se usa la parte de adultos.
+- Los tubos que la app no reconoce sola van a `data/tubos_por_revisar.csv` para que el tecnólogo médico los complete (guía en `docs/tabla_de_tubos.md`). Mientras tanto se muestran como "Tubo: dato no disponible".
+
 ## Auditoría
 
 - Se registra: fecha y hora, nombre y apellido de la enfermera, exámenes buscados y resultado entregado (tubos y orden).

@@ -26,8 +26,10 @@ def separar_palabras(texto):
     """Normaliza el texto y lo separa en palabras, sin signos de puntuación.
 
     Ejemplo: "ÁCIDO FÓLICO (FOLATO SÉRICO)" -> ["acido", "folico", "folato", "serico"]
+    Una letra unida a un número por guion se junta: "B-12" -> "b12".
     """
-    return re.sub(r"[^a-z0-9]+", " ", normalizar(texto)).split()
+    texto = re.sub(r"([a-z])-(\d)", r"\1\2", normalizar(texto))
+    return re.sub(r"[^a-z0-9]+", " ", texto).split()
 
 
 def nombre_en_una_linea(nombre):

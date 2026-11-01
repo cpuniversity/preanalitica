@@ -2,10 +2,12 @@
 
 import re
 from contextlib import closing
+from datetime import datetime
 
 from flask import (Blueprint, current_app, jsonify, redirect, render_template,
                    request, session, url_for)
 
+from app.agrupador import agrupar
 from app.buscador import buscar, cargar_examenes, etiqueta_procesamiento, nombre_en_una_linea
 from app.modelos import conectar, crear_tablas
 
@@ -79,7 +81,8 @@ def leer_seleccionados(conexion):
     seleccionados = []
     for id_examen in session.get("seleccion", []):
         fila = conexion.execute(
-            "SELECT id, nombre, laboratorio, se_procesa_en_recinto FROM examenes WHERE id = ?",
+            "SELECT id, nombre, laboratorio, se_procesa_en_recinto, muestra, instrucciones, tubos "
+            "FROM examenes WHERE id = ?",
             (id_examen,),
         ).fetchone()
         if fila:  # si el listado se volvió a importar, un id antiguo puede ya no existir
@@ -150,7 +153,7 @@ def quitar_examen():
 
 @paginas.route("/tubos")
 def tubos():
-    """Paso 3: resumen de tubos (la agrupación todavía no está implementada)."""
+    """Paso 3: resumen de tubos en orden de extracción."""
     if "enfermera" not in session:
         return redirect(url_for("paginas.ingreso"))
     with closing(abrir_base()) as conexion:
@@ -159,7 +162,9 @@ def tubos():
     if not seleccionados:
         return redirect(url_for("paginas.examenes"))
     return render_template(
-        "tubos.html", paso=3, enfermera=session["enfermera"], seleccionados=seleccionados
+        "tubos.html", paso=3, enfermera=session["enfermera"],
+        resumen=agrupar(seleccionados),
+        fecha=datetime.now().strftime("%d-%m-%Y %H:%M"),
     )
 
 

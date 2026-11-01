@@ -225,6 +225,103 @@ a.boton-principal {
 
 .acciones { display: flex; gap: 12px; align-items: center; margin-top: 24px; }
 
+/* ---------- Pantalla 3: Tubos ---------- */
+.resumen-encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+.total-tubos {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: #E3F1F1;
+  color: #07504F;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.total-numero { font-size: 36px; font-weight: 700; line-height: 1; }
+
+.resumen-tubos h2 { margin-top: 32px; margin-bottom: 4px; }
+.resumen-tubos .aviso { margin: 0 0 16px; }
+.lista-avisos { margin: 8px 0 0; padding-left: 20px; }
+.lista-avisos li { margin: 4px 0; }
+
+.tubos { list-style: none; margin: 16px 0 0; padding: 0; }
+.tubo {
+  display: flex;
+  gap: 18px;
+  padding: 18px;
+  margin-bottom: 12px;
+  border: 1px solid var(--borde-tarjeta);
+  border-radius: 14px;
+  background: #FFFFFF;
+}
+.tubo-numero {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--acento);
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+}
+.tubo-numero-otra { background: #E9EEF1; color: #2B3A46; }
+.tubo-detalle { flex: 1; min-width: 0; }
+.tubo-titulo { display: flex; align-items: center; gap: 10px; }
+.tubo-nombre { font-size: 20px; font-weight: 600; }
+.tubo-etiquetas { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.tubo-examenes { margin: 0; padding-left: 20px; }
+.tubo-examenes li { margin: 4px 0; }
+.frase-listado { color: var(--texto-secundario); font-size: 16px; margin-top: 4px; }
+.etiqueta-seccion { background: #E9EEF1; color: #2B3A46; }
+
+/* Muestra de color de la tapa: es solo un apoyo, el nombre del tubo siempre va en texto */
+.tubo-color {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid #14212B40;
+  background: #FFFFFF;
+}
+.tubo-hemocultivo .tubo-color { background: #5B6B79; }
+.tubo-celeste .tubo-color { background: #7FC8E8; }
+.tubo-amarillo .tubo-color { background: #F2C230; }
+.tubo-rojo .tubo-color { background: #C8322B; }
+.tubo-verde .tubo-color { background: #2E8B57; }
+.tubo-lila .tubo-color { background: #A77BCA; }
+.tubo-gris .tubo-color { background: #9AA3AA; }
+
+/* Texto solo para lectores de pantalla */
+.lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.solo-impresion { display: none; }
+
+@media print {
+  body { background: #FFFFFF; font-size: 14px; }
+  .cabecera, .no-imprimir { display: none; }
+  .contenido { padding: 0; max-width: none; }
+  .tarjeta { border: none; padding: 0; }
+  .solo-impresion { display: block; color: var(--texto-secundario); margin: 0 0 8px; }
+  .tubo { break-inside: avoid; }
+  /* Para que los colores de fondo se impriman */
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
 /* ---------- Aviso ---------- */
 .aviso {
   margin: 24px 0 0;

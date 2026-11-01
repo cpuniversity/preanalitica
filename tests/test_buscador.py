@@ -2,7 +2,7 @@
 
 import pytest
 
-from app.buscador import buscar, cargar_examenes, etiqueta_procesamiento
+from app.buscador import buscar, cargar_examenes, etiqueta_procesamiento, separar_palabras
 from app.modelos import conectar
 from tests.conftest import cargar_examenes_de_prueba
 
@@ -62,6 +62,12 @@ def test_ordena_primero_lo_escrito_sin_error(examenes):
     assert nombres(buscar("ferritin", examenes))[0] == "FERRITINA"
     # Con igual parecido, va primero el nombre más corto
     assert nombres(buscar("glucosa", examenes)) == ["GLUCOSA", "GLUCOSA POST CARGA"]
+
+
+def test_letra_y_numero_con_o_sin_guion():
+    vitamina = [{"nombre": "VITAMINA B-12 (COBALAMINA)", "palabras": separar_palabras("VITAMINA B-12 (COBALAMINA)")}]
+    assert nombres(buscar("b12", vitamina)) == ["VITAMINA B-12 (COBALAMINA)"]
+    assert nombres(buscar("vitamina b-12", vitamina)) == ["VITAMINA B-12 (COBALAMINA)"]
 
 
 def test_con_menos_de_2_letras_no_busca(examenes):
@@ -166,6 +172,23 @@ def test_ver_tubos_muestra_los_examenes_elegidos(cliente_con_examenes):
     cliente_con_examenes.post("/examenes/agregar", data={"id": id_de(cliente_con_examenes, "ferritina")})
     html = cliente_con_examenes.get("/tubos").get_data(as_text=True)
     assert "FERRITINA" in html
+
+
+def test_pantalla_de_tubos_agrupa_y_ordena(cliente_con_examenes):
+    for consulta in ["ferritina", "acido folico", "acido urico", "hemograma", "orina", "sin laboratorio"]:
+        cliente_con_examenes.post("/examenes/agregar", data={"id": id_de(cliente_con_examenes, consulta)})
+    html = cliente_con_examenes.get("/tubos").get_data(as_text=True)
+
+    # Ferritina y ácido fólico van al mismo laboratorio externo: comparten tubo amarillo.
+    # Ácido úrico (recinto) va en otro amarillo. Hemograma en lila. Total: 3 tubos.
+    assert '<span class="total-numero">3</span>' in html
+    assert html.count("Tubo amarillo con gel") == 2
+    assert "Tubo lila (EDTA)" in html
+    # El amarillo va antes que el lila (CLSI)
+    assert html.index("Tubo amarillo con gel") < html.index("Tubo lila (EDTA)")
+    assert "Otras muestras" in html and "ORINA COMPLETA" in html
+    assert "Tubo: dato no disponible" in html and "EXAMEN SIN LABORATORIO" in html
+    assert "Imprimir resumen" in html
 
 
 def test_nueva_consulta_borra_la_seleccion(cliente_con_examenes):

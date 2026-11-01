@@ -15,6 +15,8 @@ from flask.cli import with_appcontext
 
 from app.modelos import conectar, crear_tablas
 from app.texto import normalizar
+from app.tubos import (OTRA_MUESTRA, FormatoDeTuboInvalido, clasificar, leer_tubos,
+                       tubos_mencionados)
 
 # Laboratorio del recinto (todos los demás son laboratorios de derivación)
 LABORATORIO_RECINTO = "Laboratorio Clínica Dávila Vespucio"
@@ -132,9 +134,70 @@ def leer_listado(ruta):
         examen["se_procesa_en_recinto"] = int(
             normalizar(examen["laboratorio"]) == normalizar(LABORATORIO_RECINTO)
         )
+        # Tubo según las reglas; "" si la app no puede decidirlo sola
+        examen["tubos"] = clasificar(examen["muestra"], examen["nombre"])
+        examen["tubos_automatico"] = examen["tubos"]
         examenes.append(examen)
 
     return examenes, observaciones
+
+
+# ---------- Tabla de tubos por revisar ----------
+# Los exámenes cuyo tubo la app no reconoce sola quedan en una tabla que
+# completa el tecnólogo médico. En la siguiente importación se usa lo que él escribió.
+
+COLUMNAS_TABLA_TUBOS = ["Fila del listado", "Examen", "Muestra según el listado",
+                        "Tubos que menciona", "Tubo correcto (completar)"]
+
+
+def leer_tabla_tubos(ruta):
+    """Devuelve lo que completó el tecnólogo médico: {nombre normalizado: tubo}."""
+    if not Path(ruta).exists():
+        return {}
+    with open(ruta, encoding="utf-8-sig", newline="") as archivo:
+        filas = list(csv.DictReader(archivo, delimiter=";"))
+    return {
+        normalizar(fila["Examen"]): fila["Tubo correcto (completar)"].strip()
+        for fila in filas
+        if fila.get("Examen") and (fila.get("Tubo correcto (completar)") or "").strip()
+    }
+
+
+def aplicar_tabla_tubos(examenes, completados):
+    """Usa el tubo escrito por el tecnólogo médico. Devuelve observaciones si algo no se entiende."""
+    observaciones = []
+    for examen in examenes:
+        valor = completados.get(normalizar(examen["nombre"]))
+        if not valor:
+            continue
+        if normalizar(valor) == OTRA_MUESTRA:
+            examen["tubos"] = OTRA_MUESTRA
+            continue
+        try:
+            leer_tubos(valor)
+            examen["tubos"] = normalizar(valor)
+        except FormatoDeTuboInvalido as error:
+            examen["tubos"] = ""
+            observaciones.append((examen["fila_origen"], examen["nombre"],
+                                  f"Tabla de tubos: {error}. Se deja como dato no disponible"))
+    return observaciones
+
+
+def escribir_tabla_tubos(ruta, examenes, completados):
+    """Escribe la tabla con los exámenes que necesitan revisión, conservando lo ya completado."""
+    with open(ruta, "w", encoding="utf-8-sig", newline="") as archivo:
+        escritor = csv.writer(archivo, delimiter=";")
+        escritor.writerow(COLUMNAS_TABLA_TUBOS)
+        for examen in examenes:
+            clave = normalizar(examen["nombre"])
+            if examen["tubos_automatico"] == "" or clave in completados:
+                escritor.writerow([
+                    examen["fila_origen"],
+                    examen["nombre"],
+                    " ".join(examen["muestra"].split()),
+                    ", ".join(tubos_mencionados(examen["muestra"])) or "ninguno",
+                    completados.get(clave, ""),
+                ])
 
 
 def revisar(examenes):
@@ -160,6 +223,10 @@ def revisar(examenes):
             if not examen["estabilidad"]:
                 observaciones.append((fila, nombre, f"Estabilidad: {DATO_NO_DISPONIBLE}"))
 
+        # (si la muestra está vacía, ya se avisó más arriba)
+        if examen["muestra"] and examen["tubos"] == "":
+            observaciones.append((fila, nombre, "Tubo no reconocido: completar en tubos_por_revisar.csv"))
+
         clave = normalizar(nombre)
         if clave in vistos:
             observaciones.append((fila, nombre, f"Nombre repetido (también en la fila {vistos[clave]})"))
@@ -171,7 +238,7 @@ def revisar(examenes):
 
 def guardar_en_base(conexion, examenes, archivo, cantidad_observaciones):
     """Reemplaza los exámenes de la base por los recién leídos."""
-    campos = list(TITULOS) + ["fila_origen", "estabilidad", "se_procesa_en_recinto"]
+    campos = list(TITULOS) + ["fila_origen", "estabilidad", "se_procesa_en_recinto", "tubos"]
     marcadores = ", ".join("?" for _ in campos)
     # "with conexion" guarda todo junto: si algo falla, no queda nada a medias
     with conexion:
@@ -195,19 +262,28 @@ def escribir_reporte(ruta, observaciones):
         escritor.writerows(sorted(observaciones))
 
 
-def importar(ruta_listado, conexion, ruta_reporte):
-    """Lee el listado, lo guarda en la base y escribe el reporte. Devuelve un resumen."""
+def importar(ruta_listado, conexion, ruta_reporte, ruta_tabla_tubos):
+    """Lee el listado, lo guarda en la base y escribe el reporte y la tabla de tubos.
+
+    Devuelve un resumen con conteos.
+    """
     examenes, observaciones = leer_listado(ruta_listado)
+    completados = leer_tabla_tubos(ruta_tabla_tubos)
+    observaciones += aplicar_tabla_tubos(examenes, completados)
     observaciones += revisar(examenes)
 
+    # Se borra la tabla de exámenes y se crea de nuevo, por si cambiaron sus columnas
+    conexion.execute("DROP TABLE IF EXISTS examenes")
     crear_tablas(conexion)
     guardar_en_base(conexion, examenes, ruta_listado, len(observaciones))
     escribir_reporte(ruta_reporte, observaciones)
+    escribir_tabla_tubos(ruta_tabla_tubos, examenes, completados)
 
     return {
         "examenes": len(examenes),
         "en_recinto": sum(examen["se_procesa_en_recinto"] for examen in examenes),
         "observaciones": len(observaciones),
+        "tubo_no_reconocido": sum(examen["tubos"] == "" for examen in examenes),
     }
 
 
@@ -218,10 +294,11 @@ def comando_importar(ruta_listado):
     """Importa el listado técnico (CSV) a la base de datos."""
     ruta_base = current_app.config["BASE_DATOS"]
     ruta_reporte = Path(ruta_base).parent / "reporte_revision.csv"
+    ruta_tabla_tubos = Path(ruta_base).parent / "tubos_por_revisar.csv"
 
     conexion = conectar(ruta_base)
     try:
-        resumen = importar(ruta_listado, conexion, ruta_reporte)
+        resumen = importar(ruta_listado, conexion, ruta_reporte, ruta_tabla_tubos)
     except ErrorDeImportacion as error:
         raise click.ClickException(str(error))
     finally:
@@ -233,3 +310,5 @@ def comando_importar(ruta_listado):
     click.echo(f"  Se derivan: {resumen['examenes'] - resumen['en_recinto']}")
     click.echo(f"Observaciones para revisar: {resumen['observaciones']}")
     click.echo(f"Reporte de revisión: {ruta_reporte}")
+    click.echo(f"Exámenes con tubo no reconocido: {resumen['tubo_no_reconocido']}")
+    click.echo(f"Tabla de tubos por revisar: {ruta_tabla_tubos}")

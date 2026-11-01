@@ -35,7 +35,9 @@ def crear_tablas(conexion):
             procedimientos        TEXT,
             instrucciones         TEXT,              -- preparación, conservación y traslado
             estabilidad           TEXT,              -- texto copiado desde las instrucciones
-            se_procesa_en_recinto INTEGER NOT NULL   -- 1 = sí, 0 = se deriva
+            se_procesa_en_recinto INTEGER NOT NULL,  -- 1 = sí, 0 = se deriva
+            tubos                 TEXT NOT NULL DEFAULT ''  -- ej. "amarillo", "2 celeste",
+                                                     -- "otra muestra" o "" (dato no disponible)
         );
 
         -- Un registro por cada vez que se importa el listado.
@@ -47,3 +49,10 @@ def crear_tablas(conexion):
             observaciones      INTEGER NOT NULL      -- cantidad de avisos del reporte de revisión
         );
     """)
+
+    # Bases creadas antes de existir la columna "tubos": se agrega vacía
+    # (se llena al volver a importar el listado)
+    columnas = [fila[1] for fila in conexion.execute("PRAGMA table_info(examenes)")]
+    if "tubos" not in columnas:
+        conexion.execute("ALTER TABLE examenes ADD COLUMN tubos TEXT NOT NULL DEFAULT ''")
+        conexion.commit()
