@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+<section class="tarjeta tarjeta-ingreso">
+  <h1>Identificación</h1>
+  <p class="texto-secundario">Escriba su nombre y apellido para comenzar.</p>
+
+  <form method="post" novalidate>
+    <div class="campo">
+      <label for="nombre">Nombre</label>
+      <input id="nombre" name="nombre" type="text" value="{{ nombre }}"
+             autocomplete="given-name" autofocus
+             {% if errores.nombre %}aria-invalid="true" aria-describedby="error-nombre"{% endif %}>
+      {% if errores.nombre %}<p class="error" id="error-nombre">{{ errores.nombre }}</p>{% endif %}
+    </div>
+
+    <div class="campo">
+      <label for="apellido">Apellido</label>
+      <input id="apellido" name="apellido" type="text" value="{{ apellido }}"
+             autocomplete="family-name"
+             {% if errores.apellido %}aria-invalid="true" aria-describedby="error-apellido"{% endif %}>
+      {% if errores.apellido %}<p class="error" id="error-apellido">{{ errores.apellido }}</p>{% endif %}
+    </div>
+
+    <button class="boton-principal" type="submit">Continuar</button>
+  </form>
+
+  <p class="aviso">
+    <strong>Importante:</strong> aquí no se ingresan datos del paciente
+    (ni nombre, ni RUT, ni ficha).
+  </p>
+</section>
+{% endblock %}

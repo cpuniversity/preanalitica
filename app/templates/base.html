@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Preanalítica</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+</head>
+<body>
+  <header class="cabecera">
+    <div class="cabecera-contenido">
+      <span class="marca">Preanalítica</span>
+
+      {# Los tres pasos; el paso actual se marca como activo #}
+      <ol class="pasos">
+        {% for numero, titulo in [(1, 'Identificación'), (2, 'Exámenes'), (3, 'Tubos')] %}
+          <li class="paso {% if numero == paso %}paso-activo{% elif numero < paso %}paso-hecho{% endif %}"
+              {% if numero == paso %}aria-current="step"{% endif %}>
+            <span class="paso-numero">{{ numero }}</span>
+            <span>{{ titulo }}</span>
+          </li>
+        {% endfor %}
+      </ol>
+
+      {# Desde el paso 2 se muestra el nombre de la enfermera #}
+      {% if enfermera %}
+        <div class="enfermera">
+          <span>{{ enfermera }}</span>
+          <a class="boton-secundario" href="{{ url_for('paginas.cambiar') }}">Cambiar</a>
+        </div>
+      {% endif %}
+    </div>
+  </header>
+
+  <main class="contenido">
+    {% block contenido %}{% endblock %}
+  </main>
+</body>
+</html>

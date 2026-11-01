@@ -1,0 +1,147 @@
+/* Colores y medidas del diseño (ver CLAUDE.md) */
+:root {
+  --fondo: #F4F6F7;
+  --tarjeta: #FFFFFF;
+  --borde-tarjeta: #D5DDE2;
+  --texto: #14212B;
+  --texto-secundario: #4A5B68;
+  --acento: #0B6E6E;
+  --borde-campo: #8696A3;
+  --aviso-fondo: #FFF4D6;
+  --aviso-texto: #6B4200;
+  --error: #A12622;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: "IBM Plex Sans", Arial, sans-serif;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+h1 { font-size: 28px; font-weight: 600; margin: 0 0 4px; }
+
+/* ---------- Cabecera ---------- */
+.cabecera {
+  background: var(--tarjeta);
+  border-bottom: 1px solid var(--borde-tarjeta);
+}
+.cabecera-contenido {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+.marca { font-size: 22px; font-weight: 700; color: var(--acento); }
+
+.pasos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 28px;
+}
+.paso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--texto-secundario);
+  font-weight: 500;
+}
+.paso-numero {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--borde-campo);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+}
+.paso-activo { color: var(--texto); font-weight: 600; }
+.paso-activo .paso-numero { background: var(--acento); border-color: var(--acento); color: #FFFFFF; }
+.paso-hecho .paso-numero { border-color: var(--acento); color: var(--acento); }
+
+.enfermera {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+}
+
+/* ---------- Contenido ---------- */
+.contenido {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 32px;
+}
+.tarjeta {
+  background: var(--tarjeta);
+  border: 1px solid var(--borde-tarjeta);
+  border-radius: 16px;
+  padding: 32px;
+}
+.tarjeta-ingreso { max-width: 520px; margin: 0 auto; }
+.texto-secundario { color: var(--texto-secundario); margin: 0 0 24px; }
+
+/* ---------- Formularios ---------- */
+.campo { margin-bottom: 20px; }
+.campo label { display: block; font-weight: 600; margin-bottom: 6px; }
+.campo input {
+  width: 100%;
+  height: 56px;
+  padding: 0 16px;
+  font: inherit;
+  color: var(--texto);
+  border: 2px solid var(--borde-campo);
+  border-radius: 10px;
+  background: #FFFFFF;
+}
+.campo input:focus { outline: 3px solid var(--acento); outline-offset: 1px; border-color: var(--acento); }
+.campo input[aria-invalid="true"] { border-color: var(--error); }
+.error { color: var(--error); font-weight: 500; margin: 6px 0 0; }
+
+/* ---------- Botones ---------- */
+.boton-principal {
+  width: 100%;
+  height: 56px;
+  border: none;
+  border-radius: 10px;
+  background: var(--acento);
+  color: #FFFFFF;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.boton-principal:hover { filter: brightness(1.1); }
+.boton-principal:focus-visible { outline: 3px solid var(--texto); outline-offset: 2px; }
+
+.boton-secundario {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 2px solid var(--borde-campo);
+  border-radius: 10px;
+  color: var(--texto);
+  text-decoration: none;
+  font-weight: 500;
+}
+.boton-secundario:hover { border-color: var(--acento); color: var(--acento); }
+
+/* ---------- Aviso ---------- */
+.aviso {
+  margin: 24px 0 0;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--aviso-fondo);
+  color: var(--aviso-texto);
+}

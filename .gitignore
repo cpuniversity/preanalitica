@@ -1,0 +1,23 @@
+# Entorno virtual y archivos de Python
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Datos locales: listado técnico, base de datos y auditoría
+data/
+*.db
+*.sqlite3
+auditoria_*.csv
+auditoria_*.xlsx
+
+# Configuración y claves
+.env
+
+# Sistema y editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Configuración local de Claude Code
+.claude/

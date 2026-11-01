@@ -1,0 +1,6 @@
+# Librerías que usa el proyecto.
+# Por ahora solo lo necesario para la app mínima y las pruebas.
+# pandas, openpyxl y rapidfuzz se agregarán cuando se construyan
+# el importador y el buscador.
+Flask==3.1.2
+pytest==8.4.2
