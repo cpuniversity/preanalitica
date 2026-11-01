@@ -1,6 +1,7 @@
 # Librerías que usa el proyecto.
-# Por ahora solo lo necesario para la app mínima y las pruebas.
-# pandas, openpyxl y rapidfuzz se agregarán cuando se construyan
-# el importador y el buscador.
+# El listado llegó en CSV y se lee con el módulo csv de Python,
+# así que por ahora no se necesitan pandas ni openpyxl.
 Flask==3.1.2
 pytest==8.4.2
+# Compara textos y tolera errores de tipeo (buscador de exámenes)
+rapidfuzz==3.14.6

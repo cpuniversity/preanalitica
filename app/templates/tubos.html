@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+<section class="tarjeta">
+  <h1>Tubos</h1>
+  <p class="aviso">
+    La agrupación de tubos y el orden de extracción aún no están disponibles.
+    Por ahora solo se muestran los exámenes elegidos.
+  </p>
+
+  <h2>Exámenes elegidos ({{ seleccionados|length }})</h2>
+  <ul class="seleccionados">
+    {% for examen in seleccionados %}
+      <li>
+        <div>
+          <div class="seleccionado-nombre">{{ examen.nombre }}</div>
+          <span class="etiqueta etiqueta-{{ examen.etiqueta.tipo }}">{{ examen.etiqueta.texto }}</span>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <div class="acciones">
+    <a class="boton-secundario" href="{{ url_for('paginas.examenes') }}">Volver a exámenes</a>
+    <form method="post" action="{{ url_for('paginas.nueva_consulta') }}">
+      <button class="boton-principal boton-angosto" type="submit">Nueva consulta</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

@@ -137,6 +137,94 @@ h1 { font-size: 28px; font-weight: 600; margin: 0 0 4px; }
 }
 .boton-secundario:hover { border-color: var(--acento); color: var(--acento); }
 
+/* ---------- Pantalla 2: Exámenes ---------- */
+h2 { font-size: 21px; font-weight: 600; margin: 0 0 16px; }
+
+.columnas {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.etiqueta-campo { display: block; font-weight: 600; margin-bottom: 6px; }
+
+.buscador { position: relative; }
+.buscador input {
+  width: 100%;
+  height: 60px;
+  padding: 0 18px;
+  font: inherit;
+  font-size: 20px;
+  color: var(--texto);
+  border: 2px solid var(--borde-campo);
+  border-radius: 12px;
+  background: #FFFFFF;
+}
+.buscador input:focus { outline: 3px solid var(--acento); outline-offset: 1px; border-color: var(--acento); }
+
+.sugerencias {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 6px;
+  border: 1px solid var(--borde-tarjeta);
+  border-radius: 12px;
+  background: #FFFFFF;
+  box-shadow: 0 8px 24px rgba(20, 33, 43, 0.12);
+  max-height: 520px;
+  overflow-y: auto;
+}
+.sugerencia {
+  padding: 12px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+.sugerencia:hover { background: var(--fondo); }
+.sugerencia-marcada { border-color: var(--acento); background: var(--fondo); }
+.sugerencia-agregada { cursor: default; opacity: 0.7; }
+.sugerencia-nombre { display: block; font-weight: 500; }
+.sugerencia-etiquetas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+
+.estado-busqueda { color: var(--texto-secundario); margin: 10px 0 0; min-height: 1.5em; }
+
+/* Etiquetas: siempre llevan texto, nunca solo color */
+.etiqueta {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+}
+.etiqueta-recinto { background: #E3F1F1; color: #07504F; }
+.etiqueta-deriva { background: #E8EEFB; color: #1F3F8F; }
+.etiqueta-aviso { background: var(--aviso-fondo); color: var(--aviso-texto); }
+.etiqueta-agregado { background: #E9EEF1; color: #2B3A46; }
+
+.seleccionados { list-style: none; margin: 0 0 24px; padding: 0; }
+.seleccionados li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--borde-tarjeta);
+}
+.seleccionado-nombre { font-weight: 500; margin-bottom: 4px; }
+.seleccionados .boton-secundario { background: #FFFFFF; font: inherit; cursor: pointer; }
+
+/* El botón principal también puede ser un enlace */
+a.boton-principal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+.boton-principal:disabled { background: var(--borde-campo); cursor: not-allowed; filter: none; }
+.boton-angosto { width: auto; padding: 0 28px; }
+
+.acciones { display: flex; gap: 12px; align-items: center; margin-top: 24px; }
+
 /* ---------- Aviso ---------- */
 .aviso {
   margin: 24px 0 0;

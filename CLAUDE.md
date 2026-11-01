@@ -40,6 +40,18 @@ Si algo no está en este documento, pregunta antes de implementarlo.
 - Los datos importados desde PDF pueden traer errores de extracción. Después de importar, genera un reporte de revisión (filas con campos vacíos, valores raros, duplicados) para que el tecnólogo médico lo valide antes de usar los datos.
 - El listado real del laboratorio no se sube a Git ni se imprime en logs.
 
+### Listado recibido y decisiones del dueño del dominio (noviembre 2026)
+
+- El listado llegó como CSV UTF-8 (`data/listado_tecnico.csv`). Es una exportación del documento INSVE 02000: trae filas de encabezado del documento antes de la fila de títulos.
+- No considerar la fecha de término de vigencia del documento.
+- El listado no trae sección. En esta versión no se usa la sección: no implementar reglas que dependan de ella.
+- Estabilidad: no hay columna propia. Se guarda el texto tal como lo indica el listado (dentro de las instrucciones); a futuro se creará una columna.
+- El recinto es "Laboratorio Clínica Dávila Vespucio" y trabaja 24/7. Los demás laboratorios del listado son laboratorios de derivación.
+- Un examen puede admitir más de un tipo de tubo.
+- Si una celda de código (Vidalab o Medisyn) trae más de un código, se usa el de número más grande.
+- Los exámenes cuyo "Lab. Derivado" no es un número (por ejemplo "-" o "NOTA:") no se consideran en la app.
+- Si un examen derivado no tiene estabilidad en el listado, se muestra "dato no disponible".
+
 ## Auditoría
 
 - Se registra: fecha y hora, nombre y apellido de la enfermera, exámenes buscados y resultado entregado (tubos y orden).

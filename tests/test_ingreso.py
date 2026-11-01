@@ -2,15 +2,7 @@
 
 import pytest
 
-from app import create_app
-
-
-@pytest.fixture
-def cliente():
-    # Un "navegador de prueba" que conversa con la app sin abrir el navegador real
-    app = create_app()
-    app.config["TESTING"] = True
-    return app.test_client()
+# El "cliente" (navegador de prueba) está definido en conftest.py
 
 
 def test_la_pagina_de_inicio_pide_nombre_y_apellido(cliente):

@@ -1,8 +1,65 @@
 {% extends "base.html" %}
 
 {% block contenido %}
-<section class="tarjeta">
-  <h1>Exámenes</h1>
-  <p class="texto-secundario">El buscador de exámenes aún no está disponible.</p>
-</section>
+<div class="columnas">
+  {# Columna izquierda: buscador #}
+  <section class="tarjeta">
+    <h1>Exámenes</h1>
+    <p class="texto-secundario">
+      Escriba el examen tal como aparece en la indicación médica.
+      No es necesario escribirlo completo ni con tildes.
+    </p>
+
+    {% if not hay_listado %}
+      <p class="aviso">
+        <strong>No hay listado de exámenes cargado.</strong>
+        Avise a la persona a cargo del sistema para que lo importe.
+      </p>
+    {% else %}
+      <label class="etiqueta-campo" for="buscador">Buscar examen</label>
+      <div class="buscador">
+        <input id="buscador" type="search" autocomplete="off" autofocus
+               placeholder="Escriba al menos 2 letras"
+               role="combobox" aria-autocomplete="list" aria-expanded="false"
+               aria-controls="sugerencias" aria-describedby="estado-busqueda"
+               data-url="{{ url_for('paginas.sugerencias') }}">
+        <ul id="sugerencias" class="sugerencias" role="listbox" aria-label="Sugerencias" hidden></ul>
+      </div>
+      <p id="estado-busqueda" class="estado-busqueda" aria-live="polite"></p>
+
+      {# Formulario oculto: el JavaScript lo envía al elegir una sugerencia #}
+      <form id="form-agregar" method="post" action="{{ url_for('paginas.agregar_examen') }}" hidden>
+        <input type="hidden" name="id">
+      </form>
+    {% endif %}
+  </section>
+
+  {# Columna derecha: exámenes elegidos #}
+  <aside class="tarjeta">
+    <h2>Exámenes seleccionados ({{ seleccionados|length }})</h2>
+
+    {% if seleccionados %}
+      <ul class="seleccionados">
+        {% for examen in seleccionados %}
+          <li>
+            <div>
+              <div class="seleccionado-nombre">{{ examen.nombre }}</div>
+              <span class="etiqueta etiqueta-{{ examen.etiqueta.tipo }}">{{ examen.etiqueta.texto }}</span>
+            </div>
+            <form method="post" action="{{ url_for('paginas.quitar_examen') }}">
+              <input type="hidden" name="id" value="{{ examen.id }}">
+              <button class="boton-secundario" type="submit" aria-label="Quitar {{ examen.nombre }}">Quitar</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+      <a class="boton-principal" href="{{ url_for('paginas.tubos') }}">Ver qué tubos usar</a>
+    {% else %}
+      <p class="texto-secundario">Aún no ha agregado exámenes.</p>
+      <button class="boton-principal" type="button" disabled>Ver qué tubos usar</button>
+    {% endif %}
+  </aside>
+</div>
+
+<script src="{{ url_for('static', filename='buscador.js') }}"></script>
 {% endblock %}
