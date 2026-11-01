@@ -7,7 +7,7 @@ Los requisitos completos y el estado del proyecto están en `docs/requisitos.md`
 ## Quién usa esto
 
 - Usuaria final: enfermera o matrona, muchas veces en turno de noche, con poco tiempo. La interfaz debe ser clara, ordenada y amigable.
-- Dueño del dominio: tecnólogo médico de microbiología. Las reglas clínicas las define él, no tú.
+- Dueño del dominio: tecnólogo médico. Las reglas clínicas las define él, no tú. En todo documento o material del proyecto se nombra solo como "tecnólogo médico", sin especialidad.
 
 ## Alcance de la versión 1
 

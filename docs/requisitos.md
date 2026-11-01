@@ -15,7 +15,7 @@ Ayudar al personal de enfermería y matronería a preparar la toma de muestras. 
 | Usuario | Rol |
 |---|---|
 | Enfermera o matrona | Usa la aplicación, muchas veces en turno de noche y con poco tiempo |
-| Tecnólogo médico de microbiología | Dueño del dominio: define y valida las reglas clínicas |
+| Tecnólogo médico | Dueño del dominio: define y valida las reglas clínicas |
 | Jefatura de laboratorio y de sección | Recibe la auditoría semanal por correo |
 
 ## 3. Requisitos funcionales
