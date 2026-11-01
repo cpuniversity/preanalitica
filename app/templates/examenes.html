@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% block titulo %}Exámenes · Preanalítica{% endblock %}
+
 {% block contenido %}
 <div class="columnas">
   {# Columna izquierda: buscador #}
@@ -7,13 +9,13 @@
     <h1>Exámenes</h1>
     <p class="texto-secundario">
       Escriba el examen tal como aparece en la indicación médica.
-      No es necesario escribirlo completo ni con tildes.
+      No es necesario escribirlo completo ni con tildes
     </p>
 
     {% if not hay_listado %}
       <p class="aviso">
-        <strong>No hay listado de exámenes cargado.</strong>
-        Avise a la persona a cargo del sistema para que lo importe.
+        <strong>No hay listado de exámenes cargado</strong>.
+        Avise a la persona a cargo del sistema para que lo importe
       </p>
     {% else %}
       <label class="etiqueta-campo" for="buscador">Buscar examen</label>
@@ -35,7 +37,7 @@
   </section>
 
   {# Columna derecha: exámenes elegidos #}
-  <aside class="tarjeta">
+  <aside class="tarjeta panel-seleccion">
     <h2>Exámenes seleccionados ({{ seleccionados|length }})</h2>
 
     {% if seleccionados %}
@@ -55,7 +57,7 @@
       </ul>
       <a class="boton-principal" href="{{ url_for('paginas.tubos') }}">Ver qué tubos usar</a>
     {% else %}
-      <p class="texto-secundario">Aún no ha agregado exámenes.</p>
+      <p class="texto-secundario">Aún no ha agregado exámenes</p>
       <button class="boton-principal" type="button" disabled>Ver qué tubos usar</button>
     {% endif %}
   </aside>

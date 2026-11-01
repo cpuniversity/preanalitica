@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 
+{% block titulo %}Identificación · Preanalítica{% endblock %}
+
 {% block contenido %}
 <section class="tarjeta tarjeta-ingreso">
   <h1>Identificación</h1>
-  <p class="texto-secundario">Escriba su nombre y apellido para comenzar.</p>
+  <p class="texto-secundario">Escriba su nombre y apellido para comenzar</p>
 
   <form method="post" novalidate>
     <div class="campo">
@@ -27,7 +29,7 @@
 
   <p class="aviso">
     <strong>Importante:</strong> aquí no se ingresan datos del paciente
-    (ni nombre, ni RUT, ni ficha).
+    (ni nombre, ni RUT, ni ficha)
   </p>
 </section>
 {% endblock %}

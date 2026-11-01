@@ -28,11 +28,11 @@ PATRON_NOMBRE = re.compile(r"[^\W\d_]+([ '\-][^\W\d_]+)*")
 def revisar_nombre(texto, campo):
     """Devuelve un mensaje de error si el texto no sirve como nombre, o None si está bien."""
     if not texto:
-        return f"Escriba su {campo}."
+        return f"Escriba su {campo}"
     if len(texto) > LARGO_MAXIMO:
-        return f"El {campo} no puede tener más de {LARGO_MAXIMO} caracteres."
+        return f"El {campo} no puede tener más de {LARGO_MAXIMO} caracteres"
     if not PATRON_NOMBRE.fullmatch(texto):
-        return f"El {campo} solo puede tener letras, espacios, guion (-) o apóstrofo (')."
+        return f"El {campo} solo puede tener letras, espacios, guion (-) o apóstrofo (')"
     return None
 
 
@@ -115,7 +115,7 @@ def examenes():
 def sugerencias():
     """Devuelve (en formato JSON) las sugerencias para lo que se ha escrito en el buscador."""
     if "enfermera" not in session:
-        return jsonify({"error": "Debe identificarse primero."}), 401
+        return jsonify({"error": "Debe identificarse primero"}), 401
     consulta = request.args.get("q", "")
     with closing(abrir_base()) as conexion:
         encontrados = buscar(consulta, cargar_examenes(conexion))
@@ -177,6 +177,8 @@ def tubos():
     return render_template(
         "tubos.html", paso=3, enfermera=session["enfermera"],
         resumen=resumen, derivados=derivados,
+        # Para mostrar en cada tubo una etiqueta con la estabilidad de sus exámenes derivados
+        veredictos={d["examen"]["id"]: d for d in derivados},
         fecha=ahora.strftime("%d-%m-%Y %H:%M"),
     )
 
@@ -187,6 +189,32 @@ def nueva_consulta():
     session.pop("seleccion", None)
     session.pop("ultima_auditada", None)
     return redirect(url_for("paginas.examenes"))
+
+
+@paginas.route("/favicon.ico")
+def favicon():
+    """Algunos navegadores piden el ícono en esta dirección: los mandamos al ícono de la app."""
+    return redirect(url_for("static", filename="icono.svg"))
+
+
+# ---------- Páginas de error en español ----------
+
+@paginas.app_errorhandler(404)
+def pagina_no_encontrada(error):
+    return render_template(
+        "error.html", paso=0, enfermera=session.get("enfermera"),
+        titulo_error="Página no encontrada",
+        mensaje="La dirección que buscó no existe en Preanalítica",
+    ), 404
+
+
+@paginas.app_errorhandler(500)
+def error_interno(error):
+    return render_template(
+        "error.html", paso=0, enfermera=session.get("enfermera"),
+        titulo_error="Ocurrió un problema",
+        mensaje="La aplicación tuvo un error inesperado. Intente de nuevo; si se repite, avise a la persona a cargo del sistema",
+    ), 500
 
 
 @paginas.route("/cambiar")

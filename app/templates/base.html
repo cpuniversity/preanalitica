@@ -3,7 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Preanalítica</title>
+  {# Cada pantalla pone su nombre en la pestaña del navegador #}
+  <title>{% block titulo %}Preanalítica{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icono.svg') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -19,8 +21,16 @@
         {% for numero, titulo in [(1, 'Identificación'), (2, 'Exámenes'), (3, 'Tubos')] %}
           <li class="paso {% if numero == paso %}paso-activo{% elif numero < paso %}paso-hecho{% endif %}"
               {% if numero == paso %}aria-current="step"{% endif %}>
-            <span class="paso-numero">{{ numero }}</span>
-            <span>{{ titulo }}</span>
+            {# Desde Tubos se puede volver a Exámenes con un clic en el paso #}
+            {% if numero == 2 and paso == 3 %}
+              <a class="paso-enlace" href="{{ url_for('paginas.examenes') }}">
+                <span class="paso-numero">{{ numero }}</span>
+                <span>{{ titulo }}</span>
+              </a>
+            {% else %}
+              <span class="paso-numero">{{ numero }}</span>
+              <span>{{ titulo }}</span>
+            {% endif %}
           </li>
         {% endfor %}
       </ol>

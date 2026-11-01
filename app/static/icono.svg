@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Ícono de la app: un tubo de muestra con tapa, en el color de acento -->
+  <rect width="32" height="32" rx="7" fill="#0B6E6E"/>
+  <rect x="11" y="5" width="10" height="5" rx="1.5" fill="#FFFFFF"/>
+  <path d="M12 11h8v12a4 4 0 0 1-8 0z" fill="none" stroke="#FFFFFF" stroke-width="2"/>
+  <path d="M13 18h6v5a3 3 0 0 1-6 0z" fill="#E3F1F1"/>
+</svg>

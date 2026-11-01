@@ -39,17 +39,18 @@
     const consulta = campo.value.trim();
     if (consulta.replace(/\s/g, "").length < 2) {
       mostrar([]);
-      estado.textContent = consulta ? "Escriba al menos 2 letras." : "";
+      estado.textContent = consulta ? "Escriba al menos 2 letras" : "";
       return;
     }
 
+    estado.textContent = "Buscando…";
     let datos;
     try {
       const respuesta = await fetch(campo.dataset.url + "?q=" + encodeURIComponent(consulta));
       if (!respuesta.ok) throw new Error(respuesta.status);
       datos = await respuesta.json();
     } catch (error) {
-      estado.textContent = "No se pudo buscar. Recargue la página e intente de nuevo.";
+      estado.textContent = "No se pudo buscar. Recargue la página e intente de nuevo";
       return;
     }
 
@@ -58,8 +59,8 @@
 
     mostrar(datos);
     estado.textContent = datos.length
-      ? "Haga clic en el examen para agregarlo, o use las flechas y Enter."
-      : "No se encontraron exámenes parecidos. Revise lo escrito.";
+      ? "Haga clic en el examen para agregarlo, o use las flechas y Enter"
+      : "No se encontraron exámenes parecidos. Revise lo escrito";
   }
 
   function mostrar(datos) {

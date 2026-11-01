@@ -17,6 +17,12 @@ def create_app():
     from app.modelos import RUTA_BASE_DATOS
     app.config["BASE_DATOS"] = os.environ.get("BASE_DATOS", str(RUTA_BASE_DATOS))
 
+    # Filtro para las plantillas: {{ texto|sin_punto }} deja el texto en una sola
+    # línea y sin punto final (el listado a veces lo trae y a veces no)
+    @app.template_filter("sin_punto")
+    def sin_punto(texto):
+        return " ".join((texto or "").split()).rstrip(". ")
+
     # Registramos las páginas definidas en rutas.py
     from app.rutas import paginas
     app.register_blueprint(paginas)

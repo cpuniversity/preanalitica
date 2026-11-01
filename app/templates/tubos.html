@@ -1,20 +1,50 @@
 {% extends "base.html" %}
 
+{% block titulo %}Tubos · Preanalítica{% endblock %}
+
+{# Los textos se muestran sin punto final (el filtro sin_punto lo quita a los del listado) #}
+
 {# Muestra la etiqueta de laboratorio (recinto / deriva / dato no disponible) #}
 {% macro etiqueta(e) %}<span class="etiqueta etiqueta-{{ e.tipo }}">{{ e.texto }}</span>{% endmacro %}
 
-{# Lista de exámenes con sus advertencias, tal como las escribe el listado #}
+{# Etiqueta corta con el resultado de estabilidad de un derivado; lleva a su detalle más abajo #}
+{% macro etiqueta_estabilidad(d) %}
+  {% set textos = {
+    "alcanza": ("bien", "Estabilidad: lo permite"),
+    "al_limite": ("aviso", "Estabilidad: al límite"),
+    "no_alcanza": ("alerta", "Estabilidad: NO alcanza"),
+    "segun_demanda": ("aviso", "Según demanda"),
+    "sin_dia": ("aviso", "Día de proceso: dato no disponible"),
+    "no_disponible": ("aviso", "Estabilidad: dato no disponible"),
+  } %}
+  {% set tipo, texto = textos[d.resultado] %}
+  <a class="etiqueta etiqueta-{{ tipo }}" href="#derivado-{{ d.examen.id }}">{{ texto }} · ver detalle</a>
+{% endmacro %}
+
+{# Lista de exámenes de un tubo, con sus advertencias tal como las escribe el listado #}
 {% macro lista_examenes(examenes) %}
   <ul class="tubo-examenes">
     {% for examen in examenes %}
       <li>
         {{ examen.nombre }}
+        {% if examen.id in veredictos %}{{ etiqueta_estabilidad(veredictos[examen.id]) }}{% endif %}
         {% for frase in examen.luz %}
-          <div class="frase-listado"><strong>Luz:</strong> {{ frase }}</div>
+          <div class="frase-listado"><strong>Luz:</strong> {{ frase|sin_punto }}</div>
         {% endfor %}
       </li>
     {% endfor %}
   </ul>
+{% endmacro %}
+
+{# Botones de la pantalla, al final del resumen #}
+{% macro acciones() %}
+  <div class="acciones no-imprimir">
+    <a class="boton-secundario" href="{{ url_for('paginas.examenes') }}">Volver a exámenes</a>
+    <button class="boton-secundario" type="button" onclick="window.print()">Imprimir resumen</button>
+    <form method="post" action="{{ url_for('paginas.nueva_consulta') }}">
+      <button class="boton-principal boton-angosto" type="submit">Nueva consulta</button>
+    </form>
+  </div>
 {% endmacro %}
 
 {% block contenido %}
@@ -25,7 +55,7 @@
   <div class="resumen-encabezado">
     <div>
       <h1>Tubos para la toma de muestra</h1>
-      <p class="texto-secundario">Numerados en orden de extracción (CLSI).</p>
+      <p class="texto-secundario">Numerados en orden de extracción (CLSI)</p>
     </div>
     <div class="total-tubos">
       <span class="total-numero">{{ resumen.total_tubos }}</span>
@@ -33,35 +63,36 @@
     </div>
   </div>
 
+  {% set rechazables = derivados|selectattr("resultado", "equalto", "no_alcanza")|list %}
+  {% if rechazables %}
+    <div class="alerta" role="alert">
+      <strong>Atención: {{ rechazables|length }}
+        {{ "examen derivado podría ser rechazado" if rechazables|length == 1 else "exámenes derivados podrían ser rechazados" }}
+        por estabilidad</strong>.
+      Revise la sección "Exámenes que se derivan" antes de tomar la muestra
+    </div>
+  {% endif %}
+
   {% if resumen.examenes_con_ayuno %}
     <div class="aviso">
       <strong>Ayuno: revise lo que indica el listado</strong>
       <ul class="lista-avisos">
         {% for examen in resumen.examenes_con_ayuno %}
           <li><strong>{{ examen.nombre }}:</strong>
-            {% for frase in examen.ayuno %}{{ frase }} {% endfor %}
+            {{ examen.ayuno|map("sin_punto")|join(". ") }}
           </li>
         {% endfor %}
       </ul>
     </div>
   {% endif %}
 
-  {% set rechazables = derivados|selectattr("resultado", "equalto", "no_alcanza")|list %}
-  {% if rechazables %}
-    <div class="alerta">
-      <strong>Atención: {{ rechazables|length }}
-        {{ "examen derivado podría ser rechazado" if rechazables|length == 1 else "exámenes derivados podrían ser rechazados" }}
-        por estabilidad.</strong>
-      Revise la sección "Exámenes que se derivan" antes de tomar la muestra.
-    </div>
-  {% endif %}
-
   {% if resumen.sin_tubo %}
     <div class="aviso">
-      <strong>Tubo: dato no disponible.</strong> Consulte con el laboratorio antes de tomar la muestra.
+      <strong>Tubo: dato no disponible</strong>. Consulte con el laboratorio antes de tomar la muestra
       <ul class="lista-avisos">
         {% for examen in resumen.sin_tubo %}
-          <li>{{ examen.nombre }} {{ etiqueta(examen.etiqueta) }}</li>
+          <li>{{ examen.nombre }} {{ etiqueta(examen.etiqueta) }}
+            {% if examen.id in veredictos %}{{ etiqueta_estabilidad(veredictos[examen.id]) }}{% endif %}</li>
         {% endfor %}
       </ul>
     </div>
@@ -98,7 +129,7 @@
 
   {% if resumen.punciones_aparte %}
     <h2>Punción arterial aparte</h2>
-    <p class="texto-secundario">Fuera del orden de extracción venosa.</p>
+    <p class="texto-secundario">Fuera del orden de extracción venosa</p>
     <ul class="tubos">
       {% for tubo in resumen.punciones_aparte %}
         <li class="tubo tubo-{{ tubo.tipo }}">
@@ -118,19 +149,21 @@
 
   {% if resumen.otras_muestras %}
     <h2>Otras muestras</h2>
-    <p class="texto-secundario">No son de sangre: no entran en el orden de extracción, pero deben tomarse igual.</p>
+    <p class="texto-secundario">No son de sangre: no entran en el orden de extracción, pero deben tomarse igual</p>
     <ul class="tubos">
       {% for examen in resumen.otras_muestras %}
         <li class="tubo">
           <span class="tubo-numero tubo-numero-otra" aria-hidden="true">•</span>
           <div class="tubo-detalle">
             <div class="tubo-nombre">{{ examen.nombre }}</div>
-            <div class="tubo-etiquetas">{{ etiqueta(examen.etiqueta) }}</div>
+            <div class="tubo-etiquetas">
+              {{ etiqueta(examen.etiqueta) }}
+              {% if examen.id in veredictos %}{{ etiqueta_estabilidad(veredictos[examen.id]) }}{% endif %}
+            </div>
             <div class="frase-listado"><strong>Muestra según el listado:</strong>
-              {# En una sola línea y sin punto final, como la mayoría de las muestras del listado #}
-              {{ (examen.muestra.split()|join(" ")).rstrip(".").strip() if examen.muestra else "dato no disponible" }}</div>
+              {{ examen.muestra|sin_punto if examen.muestra else "dato no disponible" }}</div>
             {% for frase in examen.luz %}
-              <div class="frase-listado"><strong>Luz:</strong> {{ frase }}</div>
+              <div class="frase-listado"><strong>Luz:</strong> {{ frase|sin_punto }}</div>
             {% endfor %}
           </div>
         </li>
@@ -142,23 +175,24 @@
     <h2>Exámenes que se derivan</h2>
     <ul class="tubos">
       {% for d in derivados %}
-        <li class="tubo derivado derivado-{{ d.resultado }}">
+        <li class="tubo derivado derivado-{{ d.resultado }}" id="derivado-{{ d.examen.id }}">
           <div class="tubo-detalle">
             <div class="tubo-nombre">{{ d.examen.nombre }}</div>
             <div class="tubo-etiquetas">{{ etiqueta(d.examen.etiqueta) }}</div>
 
+            {# Cuántos días pasa guardada la muestra antes de que la procese el laboratorio externo #}
+            {% if d.espera_dias == 0 %}
+              {% set guardada = "la muestra no tendría que esperar guardada" %}
+            {% else %}
+              {% set guardada = "la muestra esperaría " ~ d.espera_dias ~ (" día" if d.espera_dias == 1 else " días") ~ " guardada antes de procesarse" %}
+            {% endif %}
+
             <dl class="datos-derivado">
               <dt>Días de proceso</dt>
               <dd>{{ d.dias_proceso_texto }}</dd>
-              {# Cuántos días pasa guardada la muestra antes de que la procese el laboratorio externo #}
-              {% if d.espera_dias == 0 %}
-                {% set guardada = "la muestra no esperaría días guardada antes de procesarse" %}
-              {% else %}
-                {% set guardada = "la muestra esperaría " ~ d.espera_dias ~ (" día" if d.espera_dias == 1 else " días") ~ " guardada antes de procesarse" %}
-              {% endif %}
               {% if d.dia_proceso_nombre %}
                 <dt>Se procesaría</dt>
-                <dd>el {{ d.dia_proceso_nombre }}: {{ guardada }}</dd>
+                <dd>{{ d.dia_proceso_nombre|capitalize }}. {{ guardada|capitalize }}</dd>
               {% endif %}
               {% if d.resultado == "segun_demanda" %}
                 <dt>Resultado en</dt>
@@ -168,44 +202,38 @@
 
             {% set dato = d.temperatura_usada ~ " " ~ d.estabilidad_usada ~ "; " ~ guardada %}
             {% if d.resultado == "alcanza" %}
-              <p class="veredicto veredicto-bien"><strong>La estabilidad lo permite</strong> (estabilidad {{ dato }}).</p>
+              <p class="veredicto veredicto-bien"><strong>La estabilidad lo permite</strong> (estabilidad {{ dato }})</p>
             {% elif d.resultado == "al_limite" %}
               <p class="veredicto veredicto-aviso"><strong>Al límite: consultar con el laboratorio</strong>
-                antes de tomar la muestra (estabilidad {{ dato }}).</p>
+                antes de tomar la muestra (estabilidad {{ dato }})</p>
             {% elif d.resultado == "no_alcanza" %}
               <p class="veredicto veredicto-alerta"><strong>La estabilidad NO alcanza: la muestra podría ser rechazada</strong>
-                (estabilidad {{ dato }}).<br>
+                (estabilidad {{ dato }})<br>
                 {% if d.sugerencia_texto %}
-                  Para que alcance, conviene tomarla: {{ d.sugerencia_texto|join(", ") }}, antes de las 15:00.
+                  Para que alcance, conviene tomarla: {{ d.sugerencia_texto|join(", ") }}, antes de las 15:00
                 {% else %}
-                  No hay un día de la próxima semana en que alcance: consultar con el laboratorio.
+                  No hay un día de la próxima semana en que alcance: consultar con el laboratorio
                 {% endif %}
               </p>
             {% elif d.resultado == "segun_demanda" %}
               <p class="veredicto veredicto-aviso">Se procesa según demanda: no se sabe el día exacto.
-                <strong>Consultar con el laboratorio si la estabilidad es corta.</strong></p>
+                <strong>Consultar con el laboratorio si la estabilidad es corta</strong></p>
             {% elif d.resultado == "sin_dia" %}
-              <p class="veredicto veredicto-aviso"><strong>Día de proceso: dato no disponible.</strong>
-                Consultar con el laboratorio.</p>
+              <p class="veredicto veredicto-aviso"><strong>Día de proceso: dato no disponible</strong>.
+                Consultar con el laboratorio</p>
             {% else %}
-              <p class="veredicto veredicto-aviso"><strong>Estabilidad: dato no disponible.</strong>
-                Consultar con el laboratorio.</p>
+              <p class="veredicto veredicto-aviso"><strong>Estabilidad: dato no disponible</strong>.
+                Consultar con el laboratorio</p>
             {% endif %}
 
             <div class="frase-listado"><strong>Estabilidad según el listado:</strong>
-              {{ d.estabilidad_texto or "dato no disponible" }}</div>
+              {{ d.estabilidad_texto|sin_punto or "dato no disponible" }}</div>
           </div>
         </li>
       {% endfor %}
     </ul>
   {% endif %}
 
-  <div class="acciones no-imprimir">
-    <a class="boton-secundario" href="{{ url_for('paginas.examenes') }}">Volver a exámenes</a>
-    <button class="boton-secundario" type="button" onclick="window.print()">Imprimir resumen</button>
-    <form method="post" action="{{ url_for('paginas.nueva_consulta') }}">
-      <button class="boton-principal boton-angosto" type="submit">Nueva consulta</button>
-    </form>
-  </div>
+  {{ acciones() }}
 </section>
 {% endblock %}

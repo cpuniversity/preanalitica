@@ -17,7 +17,7 @@ def test_la_pagina_de_inicio_pide_nombre_y_apellido(cliente):
 def test_sin_nombre_no_avanza(cliente):
     respuesta = cliente.post("/", data={"nombre": "  ", "apellido": "Soto"})
     assert respuesta.status_code == 200
-    assert "Escriba su nombre." in respuesta.get_data(as_text=True)
+    assert "Escriba su nombre</p>" in respuesta.get_data(as_text=True)
 
 
 @pytest.fixture(params=["123", "Ana2", "@#$%", "---", "Ana_Soto", ".", "Ana  -  "])

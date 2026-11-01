@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ titulo_error }} · Preanalítica{% endblock %}
+
+{% block contenido %}
+<section class="tarjeta tarjeta-ingreso">
+  <h1>{{ titulo_error }}</h1>
+  <p class="texto-secundario">{{ mensaje }}</p>
+  {% if enfermera %}
+    <a class="boton-principal" href="{{ url_for('paginas.examenes') }}">Volver a exámenes</a>
+  {% else %}
+    <a class="boton-principal" href="{{ url_for('paginas.ingreso') }}">Volver al inicio</a>
+  {% endif %}
+</section>
+{% endblock %}

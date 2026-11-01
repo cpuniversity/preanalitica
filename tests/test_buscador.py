@@ -211,7 +211,7 @@ def test_pantalla_de_tubos_agrupa_y_ordena(cliente_con_examenes):
     # Ferritina y ácido fólico se derivan: aparecen en su sección.
     # Sus datos de prueba no traen día de proceso, así que se avisa.
     assert "Exámenes que se derivan" in html
-    assert "Día de proceso: dato no disponible." in html
+    assert "<strong>Día de proceso: dato no disponible</strong>" in html
 
 
 def test_nueva_consulta_borra_la_seleccion(cliente_con_examenes):
