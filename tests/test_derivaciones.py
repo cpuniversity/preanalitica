@@ -15,9 +15,9 @@ from app.derivaciones import (
     dia_de_recepcion,
     leer_dias_proceso,
     leer_estabilidad,
-    revisar_derivaciones,
-    revisar_derivado,
+    RevisorDeEstabilidad,
 )
+from app.examen import Examen
 
 LUNES = {0}
 
@@ -28,16 +28,9 @@ def sin_feriados(dia):
 
 def examen(dias="LU", estabilidad="", tubos="amarillo", tiempo_respuesta="3",
            laboratorio="Laboratorio Externo Prueba", recinto=0, muestra="SANGRE"):
-    return {
-        "nombre": "EXAMEN PRUEBA",
-        "dias_proceso": dias,
-        "estabilidad": estabilidad,
-        "tubos": tubos,
-        "tiempo_respuesta": tiempo_respuesta,
-        "laboratorio": laboratorio,
-        "se_procesa_en_recinto": recinto,
-        "muestra": muestra,
-    }
+    return Examen(nombre="EXAMEN PRUEBA", dias_proceso=dias, estabilidad=estabilidad, tubos=tubos,
+                  tiempo_respuesta=tiempo_respuesta, laboratorio=laboratorio,
+                  se_procesa_en_recinto=recinto, muestra=muestra)
 
 
 # ---------- Leer los días de proceso ----------
@@ -216,64 +209,64 @@ JUEVES_10 = datetime(2026, 11, 5, 10, 0)
 
 
 def revisar(examen_prueba, ahora=JUEVES_10):
-    return revisar_derivado(examen_prueba, ahora, sin_feriados)
+    return RevisorDeEstabilidad(sin_feriados).revisar(examen_prueba, ahora)
 
 
 def test_jueves_solo_lunes_estabilidad_2_dias_no_alcanza_y_sugiere_domingo():
     revision = revisar(examen(dias="LU", estabilidad="Refrigerado 2 días"))
-    assert revision["dia_proceso"] == date(2026, 11, 9)
-    assert revision["espera_dias"] == 4
-    assert revision["resultado"] == "no_alcanza"
+    assert revision.dia_proceso == date(2026, 11, 9)
+    assert revision.espera_dias == 4
+    assert revision.resultado == "no_alcanza"
     # El sábado la espera sería 2 días (al límite); el domingo, 1 día
-    assert revision["sugerencia"] == [date(2026, 11, 8)]
+    assert revision.sugerencia == [date(2026, 11, 8)]
 
 
 def test_jueves_solo_lunes_estabilidad_7_dias_alcanza():
     revision = revisar(examen(dias="LU", estabilidad="Refrigerado 7 días"))
-    assert revision["resultado"] == "alcanza"
-    assert revision["temperatura_usada"] == "refrigerada"
-    assert revision["estabilidad_usada"] == "7 días"
+    assert revision.resultado == "alcanza"
+    assert revision.temperatura_usada == "refrigerada"
+    assert revision.estabilidad_usada == "7 días"
 
 
 def test_viernes_antes_y_despues_de_las_15():
     estabilidad = "Refrigerado 3 días"
     # Antes de las 15:00: recepción viernes, proceso lunes, espera 3 días = estabilidad
-    assert revisar(examen(estabilidad=estabilidad), datetime(2026, 11, 6, 14, 0))["resultado"] == "al_limite"
+    assert revisar(examen(estabilidad=estabilidad), datetime(2026, 11, 6, 14, 0)).resultado == "al_limite"
     # Después de las 15:00: recepción sábado, espera 2 días
-    assert revisar(examen(estabilidad=estabilidad), datetime(2026, 11, 6, 16, 0))["resultado"] == "alcanza"
+    assert revisar(examen(estabilidad=estabilidad), datetime(2026, 11, 6, 16, 0)).resultado == "alcanza"
 
 
 def test_sin_refrigerada_se_usa_la_ambiente():
     revision = revisar(examen(dias="LU", estabilidad="Ambiente 7 días. Congelado 1 mes"))
-    assert revision["temperatura_usada"] == "ambiente"
-    assert revision["resultado"] == "alcanza"
+    assert revision.temperatura_usada == "ambiente"
+    assert revision.resultado == "alcanza"
 
 
 def test_solo_congelada_no_se_usa_para_decidir():
     revision = revisar(examen(dias="LU", estabilidad="Congelado 1 mes"))
-    assert revision["resultado"] == "no_disponible"
-    assert revision["duraciones"] == {"congelada": 720}
+    assert revision.resultado == "no_disponible"
+    assert revision.duraciones == {"congelada": 720}
 
 
 def test_sin_estabilidad_es_dato_no_disponible():
-    assert revisar(examen(dias="LU", estabilidad=""))["resultado"] == "no_disponible"
+    assert revisar(examen(dias="LU", estabilidad="")).resultado == "no_disponible"
 
 
 def test_segun_demanda_no_da_veredicto_y_muestra_tiempo_de_respuesta():
     revision = revisar(examen(dias="SEGÚN DEMANDA", estabilidad="Refrigerado 2 días", tiempo_respuesta="6"))
-    assert revision["resultado"] == "segun_demanda"
-    assert revision["tiempo_respuesta"] == "6 días hábiles"
+    assert revision.resultado == "segun_demanda"
+    assert revision.tiempo_respuesta == "6 días hábiles"
 
 
 def test_dia_de_proceso_no_disponible():
-    assert revisar(examen(dias="SIN DIA ESPECIFICO", estabilidad="Refrigerado 7 días"))["resultado"] == "sin_dia"
+    assert revisar(examen(dias="SIN DIA ESPECIFICO", estabilidad="Refrigerado 7 días")).resultado == "sin_dia"
 
 
 def test_no_alcanza_ningun_dia_de_la_semana():
     # Estabilidad de 1 día y proceso solo lunes: ni tomándola el domingo alcanza (espera 1 = al límite)
     revision = revisar(examen(dias="LU", estabilidad="Refrigerado 1 día"))
-    assert revision["resultado"] == "no_alcanza"
-    assert revision["sugerencia"] == []
+    assert revision.resultado == "no_alcanza"
+    assert revision.sugerencia == []
 
 
 def test_solo_se_revisan_los_que_se_derivan():
@@ -282,11 +275,11 @@ def test_solo_se_revisan_los_que_se_derivan():
         examen(laboratorio="Laboratorio Clínica Dávila Vespucio", recinto=1),
         examen(laboratorio=""),  # sin laboratorio: no se sabe si se deriva
     ]
-    assert len(revisar_derivaciones(examenes, JUEVES_10, sin_feriados)) == 1
+    assert len(RevisorDeEstabilidad(sin_feriados).revisar_derivados(examenes, JUEVES_10)) == 1
 
 
 def test_textos_para_la_pantalla():
-    revision = revisar_derivaciones([examen(dias="LU", estabilidad="Refrigerado 2 días. Congelado 1 mes")],
-                                    JUEVES_10, sin_feriados)[0]
-    assert revision["dia_proceso_nombre"] == "lunes 9/11"
-    assert revision["sugerencia_texto"] == ["domingo 8/11"]
+    revision = RevisorDeEstabilidad(sin_feriados).revisar_derivados(
+        [examen(dias="LU", estabilidad="Refrigerado 2 días. Congelado 1 mes")], JUEVES_10)[0]
+    assert revision.dia_proceso_nombre == "lunes 9/11"
+    assert revision.sugerencia_texto == ["domingo 8/11"]

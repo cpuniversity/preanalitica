@@ -7,9 +7,9 @@ import pytest
 from app import create_app
 from app.importador import (
     ErrorDeImportacion,
+    Importador,
+    LectorDeListadoCSV,
     extraer_estabilidad,
-    importar,
-    leer_listado,
     revisar,
 )
 from app.modelos import conectar
@@ -51,7 +51,7 @@ def ruta(tmp_path):
 
 def test_encuentra_titulos_despues_del_encabezado_del_documento(ruta):
     escribir_listado(ruta, [examen("EXAMEN PRUEBA UNO")])
-    examenes, _ = leer_listado(ruta)
+    examenes, _ = LectorDeListadoCSV().leer(ruta)
     assert len(examenes) == 1
     assert examenes[0]["nombre"] == "EXAMEN PRUEBA UNO"
     # 2 filas de encabezado + 1 de títulos: el examen está en la fila 4
@@ -66,7 +66,7 @@ def test_ubica_columnas_por_titulo_aunque_cambie_el_orden(ruta):
     fila[0], fila[3] = fila[3], fila[0]
     escribir_listado(ruta, [fila], titulos)
 
-    examenes, _ = leer_listado(ruta)
+    examenes, _ = LectorDeListadoCSV().leer(ruta)
     assert examenes[0]["dias_proceso"] == "MA"
     assert examenes[0]["codigo_vidalab"] == "999"
 
@@ -74,7 +74,7 @@ def test_ubica_columnas_por_titulo_aunque_cambie_el_orden(ruta):
 def test_saltos_de_linea_de_windows_se_limpian(ruta):
     # Al editar con el Bloc de notas, los saltos dentro de una celda pasan a ser \r\n
     escribir_listado(ruta, [examen("EXAMEN PRUEBA UNO", instrucciones="Línea 1\r\nEstabilidad: 7 días")])
-    examenes, _ = leer_listado(ruta)
+    examenes, _ = LectorDeListadoCSV().leer(ruta)
     assert examenes[0]["instrucciones"] == "Línea 1\nEstabilidad: 7 días"
     assert examenes[0]["estabilidad"] == "Estabilidad: 7 días"
 
@@ -83,14 +83,14 @@ def test_falta_una_columna_y_se_detiene_con_mensaje_claro(ruta):
     titulos = [t for t in TITULOS if t != "Laboratorio"]
     escribir_listado(ruta, [], titulos)
     with pytest.raises(ErrorDeImportacion, match="Laboratorio"):
-        leer_listado(ruta)
+        LectorDeListadoCSV().leer(ruta)
 
 
 def test_sin_fila_de_titulos_se_detiene(ruta):
     with open(ruta, "w", encoding="utf-8", newline="") as archivo:
         csv.writer(archivo).writerows([["a", "b"], ["c", "d"]])
     with pytest.raises(ErrorDeImportacion, match="fila de títulos"):
-        leer_listado(ruta)
+        LectorDeListadoCSV().leer(ruta)
 
 
 def test_ignora_filas_vacias_y_titulos_repetidos(ruta):
@@ -100,14 +100,14 @@ def test_ignora_filas_vacias_y_titulos_repetidos(ruta):
         TITULOS,
         examen("EXAMEN PRUEBA DOS"),
     ])
-    examenes, observaciones = leer_listado(ruta)
+    examenes, observaciones = LectorDeListadoCSV().leer(ruta)
     assert [e["nombre"] for e in examenes] == ["EXAMEN PRUEBA UNO", "EXAMEN PRUEBA DOS"]
     assert observaciones == []
 
 
 def test_fila_con_datos_sin_nombre_no_se_carga_y_se_avisa(ruta):
     escribir_listado(ruta, [examen("")])
-    examenes, observaciones = leer_listado(ruta)
+    examenes, observaciones = LectorDeListadoCSV().leer(ruta)
     assert examenes == []
     assert "sin nombre de examen" in observaciones[0][2]
 
@@ -120,7 +120,7 @@ def test_davila_vespucio_es_el_recinto(ruta):
         # Mismo laboratorio escrito sin tildes y con espacios de más
         examen("EXAMEN PRUEBA DOS", laboratorio="laboratorio clinica  davila vespucio"),
     ])
-    examenes, _ = leer_listado(ruta)
+    examenes, _ = LectorDeListadoCSV().leer(ruta)
     assert [e["se_procesa_en_recinto"] for e in examenes] == [1, 1]
 
 
@@ -130,7 +130,7 @@ def test_otros_laboratorios_se_derivan(ruta):
         # Otra sede de la misma clínica no es el recinto
         examen("EXAMEN PRUEBA DOS", laboratorio="Clínica Dávila"),
     ])
-    examenes, _ = leer_listado(ruta)
+    examenes, _ = LectorDeListadoCSV().leer(ruta)
     assert [e["se_procesa_en_recinto"] for e in examenes] == [0, 0]
 
 
@@ -154,7 +154,7 @@ def test_sin_mencion_de_estabilidad_queda_vacia():
 
 def problemas(ruta, filas):
     escribir_listado(ruta, filas)
-    examenes, _ = leer_listado(ruta)
+    examenes, _ = LectorDeListadoCSV().leer(ruta)
     return [problema for _, _, problema in revisar(examenes)]
 
 
@@ -198,7 +198,7 @@ def test_nombre_repetido_se_avisa(ruta):
 def test_lab_derivado_no_numerico_se_excluye_y_se_avisa(ruta, codigo):
     escribir_listado(ruta, [examen("EXAMEN PRUEBA UNO", codigo_derivado=codigo),
                             examen("EXAMEN PRUEBA DOS", codigo_derivado="3")])
-    examenes, observaciones = leer_listado(ruta)
+    examenes, observaciones = LectorDeListadoCSV().leer(ruta)
     assert [e["nombre"] for e in examenes] == ["EXAMEN PRUEBA DOS"]
     assert observaciones == [(4, "EXAMEN PRUEBA UNO", f'Lab. Derivado dice "{codigo}": excluido, no se cargó')]
 
@@ -207,7 +207,7 @@ def test_dos_codigos_en_una_celda_se_guarda_el_mayor(ruta):
     escribir_listado(ruta, [examen("EXAMEN PRUEBA UNO",
                                    codigo_vidalab="0302048-00 \n030204801",
                                    codigo_medisyn="03-02-048-01\n03-02-048-00")])
-    examenes, _ = leer_listado(ruta)
+    examenes, _ = LectorDeListadoCSV().leer(ruta)
     assert examenes[0]["codigo_vidalab"] == "030204801"
     assert examenes[0]["codigo_medisyn"] == "03-02-048-01"
     # Ya no es una observación para revisar
@@ -227,7 +227,7 @@ def archivos(tmp_path):
 
 
 def importar_prueba(ruta, archivos):
-    return importar(ruta, archivos["conexion"], archivos["reporte"], archivos["tabla"])
+    return Importador(archivos["conexion"]).importar(ruta, archivos["reporte"], archivos["tabla"])
 
 
 def test_importar_guarda_en_la_base_y_escribe_reporte(ruta, archivos):

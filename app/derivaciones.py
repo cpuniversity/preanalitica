@@ -18,12 +18,12 @@ Reglas (definidas por el tecnólogo médico):
 """
 
 import re
+from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 
 import holidays
 
 from app.texto import normalizar
-from app.tubos import OTRA_MUESTRA, FormatoDeTuboInvalido, leer_tubos
 
 DIAS_SEMANA = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
 
@@ -246,13 +246,10 @@ def duraciones_por_temperatura(texto):
 
 def tipos_aceptados(examen):
     """Tipos de muestra que corresponden al examen, según su tubo o su muestra."""
-    if examen["tubos"] == OTRA_MUESTRA:
-        muestra = normalizar(examen.get("muestra") or "")
+    if examen.es_otra_muestra():
+        muestra = normalizar(examen.muestra)
         return {tipo for tipo in TIPOS_DE_MUESTRA if tipo in muestra}
-    try:
-        opciones = leer_tubos(examen["tubos"]) if examen["tubos"] else []
-    except FormatoDeTuboInvalido:
-        return set()
+    opciones = examen.opciones_de_tubo() or []
     aceptados = [TIPOS_POR_TUBO.get(tipo, set()) for opcion in opciones for tipo, _ in opcion]
     # Si el examen usa tubos con distintos tipos de muestra, no se puede elegir con seguridad
     if not aceptados or any(tipos != aceptados[0] for tipos in aceptados):
@@ -265,7 +262,7 @@ def leer_estabilidad(examen):
 
     Devuelve {temperatura: horas}, o {} si no se puede saber con seguridad.
     """
-    texto = normalizar(examen.get("estabilidad") or "")
+    texto = normalizar(examen.estabilidad)
     if not texto:
         return {}
 
@@ -300,6 +297,8 @@ def describir_duracion(horas):
     return f"{horas_redondeadas} hora" if horas_redondeadas == 1 else f"{horas_redondeadas} horas"
 
 
+
+
 # ---------- Revisión de un examen derivado ----------
 
 def comparar(espera_dias, horas_estabilidad):
@@ -315,21 +314,6 @@ def comparar(espera_dias, horas_estabilidad):
     return "no_alcanza"
 
 
-def sugerir_dias_de_toma(ahora, dias_proceso, horas_estabilidad, feriado=es_feriado):
-    """Días de la próxima semana en que, tomando la muestra antes de las 15:00, alcanza."""
-    sugeridos = []
-    for adelante in range(DIAS_PARA_SUGERIR + 1):
-        dia = ahora.date() + timedelta(days=adelante)
-        # Se supone que se toma a las 10:00 (antes de las 15:00 y después de las 8:00)
-        toma = datetime(dia.year, dia.month, dia.day, 10, 0)
-        if toma < ahora:
-            continue
-        proceso = dia_de_proceso(toma, dias_proceso, feriado)
-        if proceso and comparar((proceso - dia).days, horas_estabilidad) == "alcanza":
-            sugeridos.append(dia)
-    return sugeridos
-
-
 def tiempo_de_respuesta(texto):
     """El listado da el tiempo de respuesta en días hábiles, salvo que diga otra unidad."""
     texto = " ".join((texto or "").split())
@@ -338,60 +322,133 @@ def tiempo_de_respuesta(texto):
     return f"{texto} días hábiles" if texto.isdigit() else texto.lower()
 
 
-def revisar_derivado(examen, ahora, feriado=es_feriado):
-    """Revisa un examen que se deriva. Devuelve lo que se muestra en la pantalla."""
-    revision = {
-        "examen": examen,
-        "dias_proceso_texto": describir_dias(examen.get("dias_proceso")),
-        "estabilidad_texto": " ".join((examen.get("estabilidad") or "").split()),
-        "duraciones": {},
-        "sugerencia": [],
-    }
-    dias = leer_dias_proceso(examen.get("dias_proceso"))
+class CalendarioDeProceso:
+    """Los días en que un laboratorio externo procesa un examen."""
 
-    if dias == SEGUN_DEMANDA:
-        revision["resultado"] = "segun_demanda"
-        revision["tiempo_respuesta"] = tiempo_de_respuesta(examen.get("tiempo_respuesta"))
-        revision["duraciones"] = leer_estabilidad(examen)
+    def __init__(self, texto, feriado=es_feriado):
+        self.texto = texto or ""
+        self.dias = leer_dias_proceso(texto)   # conjunto de días, SEGUN_DEMANDA o None
+        self.feriado = feriado
+
+    def es_segun_demanda(self):
+        return self.dias == SEGUN_DEMANDA
+
+    def se_entiende(self):
+        """¿Se pudo leer con seguridad qué días procesa?"""
+        return bool(self.dias) and not self.es_segun_demanda()
+
+    def describir(self):
+        """Ejemplo: "Lunes a sábado"."""
+        return describir_dias(self.texto)
+
+    def dia_de_proceso(self, ahora):
+        """Primer día en que se procesaría una muestra tomada ahora."""
+        return dia_de_proceso(ahora, self.dias, self.feriado)
+
+    def sugerir_dias_de_toma(self, ahora, horas_estabilidad):
+        """Días de la próxima semana en que, tomando la muestra antes de las 15:00, alcanza."""
+        sugeridos = []
+        for adelante in range(DIAS_PARA_SUGERIR + 1):
+            dia = ahora.date() + timedelta(days=adelante)
+            # Se supone que se toma a las 10:00 (antes de las 15:00 y después de las 8:00)
+            toma = datetime(dia.year, dia.month, dia.day, 10, 0)
+            if toma < ahora:
+                continue
+            proceso = self.dia_de_proceso(toma)
+            if proceso and comparar((proceso - dia).days, horas_estabilidad) == "alcanza":
+                sugeridos.append(dia)
+        return sugeridos
+
+
+@dataclass
+class Estabilidad:
+    """La estabilidad de la muestra de un examen, según el listado."""
+
+    texto: str          # tal como lo escribe el listado
+    duraciones: dict    # {temperatura: horas} para el tipo de muestra del examen
+
+    @classmethod
+    def de_examen(cls, examen):
+        return cls(" ".join(examen.estabilidad.split()), leer_estabilidad(examen))
+
+    def para_decidir(self):
+        """(temperatura, horas) con que se decide: refrigerada; si no hay, ambiente. None si no hay."""
+        for temperatura in ("refrigerada", "ambiente"):
+            if temperatura in self.duraciones:
+                return temperatura, self.duraciones[temperatura]
+        return None
+
+
+@dataclass
+class RevisionDeDerivacion:
+    """Lo que se le muestra a la enfermera sobre un examen derivado."""
+
+    examen: object
+    resultado: str              # alcanza, al_limite, no_alcanza, segun_demanda, sin_dia o no_disponible
+    dias_proceso_texto: str
+    estabilidad_texto: str
+    dia_proceso: date | None = None
+    espera_dias: int | None = None
+    temperatura_usada: str | None = None
+    estabilidad_usada: str | None = None
+    tiempo_respuesta: str | None = None
+    duraciones: dict = field(default_factory=dict)
+    sugerencia: list = field(default_factory=list)
+
+    @property
+    def dia_proceso_nombre(self):
+        return nombre_del_dia(self.dia_proceso) if self.dia_proceso else None
+
+    @property
+    def sugerencia_texto(self):
+        return [nombre_del_dia(dia) for dia in self.sugerencia]
+
+
+class RevisorDeEstabilidad:
+    """Revisa si la estabilidad de cada examen derivado alcanza hasta su día de proceso."""
+
+    def __init__(self, feriado=es_feriado):
+        self.feriado = feriado
+
+    def revisar(self, examen, ahora):
+        """Revisa un examen derivado y devuelve una RevisionDeDerivacion."""
+        calendario = CalendarioDeProceso(examen.dias_proceso, self.feriado)
+        estabilidad = Estabilidad.de_examen(examen)
+        revision = RevisionDeDerivacion(
+            examen=examen,
+            resultado="",
+            dias_proceso_texto=calendario.describir(),
+            estabilidad_texto=estabilidad.texto,
+            duraciones=estabilidad.duraciones,
+        )
+
+        if calendario.es_segun_demanda():
+            revision.resultado = "segun_demanda"
+            revision.tiempo_respuesta = tiempo_de_respuesta(examen.tiempo_respuesta)
+            return revision
+        if not calendario.se_entiende():
+            revision.resultado = "sin_dia"
+            revision.duraciones = {}
+            return revision
+
+        proceso = calendario.dia_de_proceso(ahora)
+        revision.dia_proceso = proceso
+        revision.espera_dias = (proceso - dia_de_recepcion(ahora)).days if proceso else None
+
+        decision = estabilidad.para_decidir()
+        if proceso is None or decision is None:
+            revision.resultado = "no_disponible"
+            return revision
+
+        temperatura, horas = decision
+        revision.temperatura_usada = temperatura
+        revision.estabilidad_usada = describir_duracion(horas)
+        revision.resultado = comparar(revision.espera_dias, horas)
+        if revision.resultado == "no_alcanza":
+            revision.sugerencia = calendario.sugerir_dias_de_toma(ahora, horas)
         return revision
-    if not dias:
-        revision["resultado"] = "sin_dia"
-        return revision
 
-    proceso = dia_de_proceso(ahora, dias, feriado)
-    recepcion = dia_de_recepcion(ahora)
-    revision["dia_proceso"] = proceso
-    revision["espera_dias"] = (proceso - recepcion).days if proceso else None
-
-    duraciones = leer_estabilidad(examen)
-    revision["duraciones"] = duraciones
-    temperatura = "refrigerada" if "refrigerada" in duraciones else "ambiente" if "ambiente" in duraciones else None
-    if proceso is None or temperatura is None:
-        revision["resultado"] = "no_disponible"
-        return revision
-
-    horas = duraciones[temperatura]
-    revision["temperatura_usada"] = temperatura
-    revision["estabilidad_usada"] = describir_duracion(horas)
-    revision["resultado"] = comparar(revision["espera_dias"], horas)
-    if revision["resultado"] == "no_alcanza":
-        revision["sugerencia"] = sugerir_dias_de_toma(ahora, dias, horas, feriado)
-    return revision
-
-
-def textos_para_pantalla(revision):
-    """Agrega los textos ya listos para mostrar (días con su nombre)."""
-    if revision.get("dia_proceso"):
-        revision["dia_proceso_nombre"] = nombre_del_dia(revision["dia_proceso"])
-    revision["sugerencia_texto"] = [nombre_del_dia(dia) for dia in revision["sugerencia"]]
-    return revision
-
-
-def revisar_derivaciones(examenes, ahora=None, feriado=es_feriado):
-    """Revisa todos los exámenes elegidos que se derivan a otro laboratorio."""
-    ahora = ahora or datetime.now()
-    return [
-        textos_para_pantalla(revisar_derivado(examen, ahora, feriado))
-        for examen in examenes
-        if examen.get("laboratorio") and not examen.get("se_procesa_en_recinto")
-    ]
+    def revisar_derivados(self, examenes, ahora=None):
+        """Revisa todos los exámenes elegidos que se derivan a otro laboratorio."""
+        ahora = ahora or datetime.now()
+        return [self.revisar(examen, ahora) for examen in examenes if examen.es_derivado()]

@@ -4,24 +4,37 @@ Todas las reglas de este archivo fueron definidas por el tecnólogo médico.
 """
 
 import re
+from dataclasses import dataclass
 
 from app.texto import normalizar
 
-# Tipos de tubo o contenedor de sangre.
-# "orden" es la posición en el orden de extracción según CLSI.
-# Los que tienen orden None no entran en el orden: son una punción aparte.
-# "exclusivo" = nunca se comparte con otro examen.
-TIPOS_DE_TUBO = {
-    "hemocultivo":      {"nombre": "Frasco de hemocultivo",                 "orden": 1,    "exclusivo": True},
-    "celeste":          {"nombre": "Tubo celeste (citrato)",                "orden": 2,    "exclusivo": False},
-    "amarillo":         {"nombre": "Tubo amarillo con gel",                 "orden": 3,    "exclusivo": False},
-    "rojo":             {"nombre": "Tubo rojo",                             "orden": 4,    "exclusivo": False},
-    "verde":            {"nombre": "Tubo verde (heparina)",                 "orden": 5,    "exclusivo": False},
-    "jeringa-venosa":   {"nombre": "Jeringa con heparina (gases venosos)",  "orden": 6,    "exclusivo": True},
-    "lila":             {"nombre": "Tubo lila (EDTA)",                      "orden": 7,    "exclusivo": False},
-    "gris":             {"nombre": "Tubo gris (fluoruro)",                  "orden": 8,    "exclusivo": False},
-    "jeringa-arterial": {"nombre": "Jeringa con heparina (gases arteriales)", "orden": None, "exclusivo": True},
-}
+
+@dataclass(frozen=True)
+class TipoDeTubo:
+    """Un tipo de tubo o contenedor de sangre (tubo, frasco o jeringa)."""
+
+    codigo: str          # el nombre corto que usa la app y la tabla del tecnólogo médico
+    nombre: str          # el nombre que ve la enfermera
+    orden: int | None    # posición en el orden de extracción CLSI; None = punción aparte
+    exclusivo: bool      # True = nunca se comparte con otro examen
+
+    def es_puncion_aparte(self):
+        """¿Queda fuera del orden de extracción venosa (gases arteriales)?"""
+        return self.orden is None
+
+
+# Catálogo de tipos de tubo, validado por el tecnólogo médico
+TIPOS_DE_TUBO = {tipo.codigo: tipo for tipo in [
+    TipoDeTubo("hemocultivo", "Frasco de hemocultivo", 1, exclusivo=True),
+    TipoDeTubo("celeste", "Tubo celeste (citrato)", 2, exclusivo=False),
+    TipoDeTubo("amarillo", "Tubo amarillo con gel", 3, exclusivo=False),
+    TipoDeTubo("rojo", "Tubo rojo", 4, exclusivo=False),
+    TipoDeTubo("verde", "Tubo verde (heparina)", 5, exclusivo=False),
+    TipoDeTubo("jeringa-venosa", "Jeringa con heparina (gases venosos)", 6, exclusivo=True),
+    TipoDeTubo("lila", "Tubo lila (EDTA)", 7, exclusivo=False),
+    TipoDeTubo("gris", "Tubo gris (fluoruro)", 8, exclusivo=False),
+    TipoDeTubo("jeringa-arterial", "Jeringa con heparina (gases arteriales)", None, exclusivo=True),
+]}
 
 # Palabras clave para reconocer cada tubo en el texto del listado
 REGLAS = [

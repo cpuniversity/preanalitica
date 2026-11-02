@@ -32,42 +32,14 @@ def separar_palabras(texto):
     return re.sub(r"[^a-z0-9]+", " ", texto).split()
 
 
-def nombre_en_una_linea(nombre):
-    """Algunos nombres del listado traen saltos de línea: los deja en una línea."""
-    return " ".join(nombre.split())
+def comienzos_del_nombre(nombre):
+    """Con qué palabra empieza el nombre y cada sinónimo entre paréntesis.
 
-
-def etiqueta_procesamiento(examen):
-    """Dice si el examen se procesa en el recinto o se deriva.
-
-    Devuelve un diccionario con el tipo (para el color) y el texto que se muestra.
+    "GLICEMIA (GLUCOSA EN SANGRE)" -> ["glicemia", "glucosa"]: el sinónimo
+    cuenta como otro nombre del mismo examen.
     """
-    if not examen["laboratorio"]:
-        return {"tipo": "aviso", "texto": "Laboratorio: dato no disponible"}
-    if examen["se_procesa_en_recinto"]:
-        return {"tipo": "recinto", "texto": "Se procesa en el recinto"}
-    return {"tipo": "deriva", "texto": "Se deriva a " + nombre_en_una_linea(examen["laboratorio"])}
-
-
-def preparar_examen(examen):
-    """Agrega lo que el buscador necesita: las palabras del nombre y cómo empieza cada nombre.
-
-    Los sinónimos entre paréntesis cuentan como otro nombre del mismo examen:
-    "GLICEMIA (GLUCOSA EN SANGRE)" empieza con "glicemia" y también con "glucosa".
-    """
-    examen["nombre"] = nombre_en_una_linea(examen["nombre"])
-    examen["palabras"] = separar_palabras(examen["nombre"])
-    nombres = [examen["nombre"]] + re.findall(r"\(([^)]*)", examen["nombre"])
-    examen["comienzos"] = [separar_palabras(n)[0] for n in nombres if separar_palabras(n)]
-    return examen
-
-
-def cargar_examenes(conexion):
-    """Lee los exámenes de la base y los prepara para buscar."""
-    return [
-        preparar_examen(dict(fila))
-        for fila in conexion.execute("SELECT id, nombre, laboratorio, se_procesa_en_recinto FROM examenes")
-    ]
+    nombres = [nombre] + re.findall(r"\(([^)]*)", nombre)
+    return [separar_palabras(n)[0] for n in nombres if separar_palabras(n)]
 
 
 def puntaje_palabra(palabra_buscada, palabras_examen):
@@ -86,26 +58,36 @@ def puntaje_palabra(palabra_buscada, palabras_examen):
     return mejor
 
 
-def buscar(consulta, examenes, maximo=MAXIMO_SUGERENCIAS):
-    """Devuelve los exámenes que más se parecen a la consulta, del más parecido al menos.
+class Buscador:
+    """Busca exámenes por nombre, tolerando errores de tipeo y sin importar tildes."""
 
-    Todas las palabras escritas deben calzar con el nombre del examen.
-    Si nada se parece lo suficiente, devuelve una lista vacía.
-    """
-    palabras_buscadas = separar_palabras(consulta)
-    if len("".join(palabras_buscadas)) < LARGO_MINIMO:
-        return []
+    def __init__(self, examenes):
+        # Para cada examen se preparan una vez sus palabras y cómo empieza cada nombre
+        self._indice = [
+            (examen, separar_palabras(examen.nombre), comienzos_del_nombre(examen.nombre))
+            for examen in examenes
+        ]
 
-    encontrados = []
-    for examen in examenes:
-        puntajes = [puntaje_palabra(p, examen["palabras"]) for p in palabras_buscadas]
-        if min(puntajes) < PARECIDO_MINIMO:
-            continue
-        puntaje = sum(puntajes) / len(puntajes)
-        # Preferimos los exámenes cuyo nombre (o un sinónimo) empieza con lo escrito
-        empieza_igual = any(comienzo.startswith(palabras_buscadas[0]) for comienzo in examen["comienzos"])
-        encontrados.append((puntaje, empieza_igual, examen))
+    def buscar(self, consulta, maximo=MAXIMO_SUGERENCIAS):
+        """Devuelve los exámenes que más se parecen a la consulta, del más parecido al menos.
 
-    # Orden: más puntaje, luego los que empiezan igual, luego los nombres más cortos
-    encontrados.sort(key=lambda e: (-e[0], not e[1], len(e[2]["nombre"]), e[2]["nombre"]))
-    return [examen for _, _, examen in encontrados[:maximo]]
+        Todas las palabras escritas deben calzar con el nombre del examen.
+        Si nada se parece lo suficiente, devuelve una lista vacía.
+        """
+        palabras_buscadas = separar_palabras(consulta)
+        if len("".join(palabras_buscadas)) < LARGO_MINIMO:
+            return []
+
+        encontrados = []
+        for examen, palabras, comienzos in self._indice:
+            puntajes = [puntaje_palabra(p, palabras) for p in palabras_buscadas]
+            if min(puntajes) < PARECIDO_MINIMO:
+                continue
+            puntaje = sum(puntajes) / len(puntajes)
+            # Preferimos los exámenes cuyo nombre (o un sinónimo) empieza con lo escrito
+            empieza_igual = any(comienzo.startswith(palabras_buscadas[0]) for comienzo in comienzos)
+            encontrados.append((puntaje, empieza_igual, examen))
+
+        # Orden: más puntaje, luego los que empiezan igual, luego los nombres más cortos
+        encontrados.sort(key=lambda e: (-e[0], not e[1], len(e[2].nombre), e[2].nombre))
+        return [examen for _, _, examen in encontrados[:maximo]]

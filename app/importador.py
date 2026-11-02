@@ -6,6 +6,7 @@ eso lo hacen otros módulos, con reglas validadas por el tecnólogo médico.
 """
 
 import csv
+from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
 
@@ -92,58 +93,76 @@ def elegir_codigo_mayor(texto):
     return max(codigos, key=lambda codigo: int("".join(c for c in codigo if c.isdigit()) or 0))
 
 
-def leer_listado(ruta):
-    """Lee el CSV y devuelve (examenes, observaciones).
+class LectorDeListado(ABC):
+    """Cualquier forma de leer el listado técnico (CSV hoy; Excel o PDF a futuro).
 
-    examenes: lista de diccionarios, uno por examen.
-    observaciones: filas que no se pudieron cargar.
+    Para un formato nuevo se agrega otro lector; el Importador no cambia.
     """
-    with open(ruta, encoding="utf-8-sig", newline="") as archivo:
-        filas = list(csv.reader(archivo))
 
-    numero_titulos = encontrar_fila_titulos(filas)
-    posiciones = ubicar_columnas(filas[numero_titulos])
+    @abstractmethod
+    def leer(self, ruta):
+        """Devuelve (registros, observaciones).
 
-    examenes = []
-    observaciones = []
-    # La fila del archivo se cuenta desde 1, como en Excel
-    for numero, fila in enumerate(filas[numero_titulos + 1:], start=numero_titulos + 2):
-        examen = {"fila_origen": numero}
-        for campo, posicion in posiciones.items():
-            valor = fila[posicion] if posicion < len(fila) else ""
-            # Los saltos de línea de Windows (\r\n) se dejan como saltos simples (\n),
-            # por si el archivo se editó con el Bloc de notas
-            examen[campo] = valor.replace("\r\n", "\n").strip()
+        registros: lista de diccionarios, uno por examen, con las columnas del listado.
+        observaciones: filas que no se pudieron cargar, como (fila, examen, problema).
+        """
 
-        # Fila totalmente vacía: se ignora
-        if not any(examen[campo] for campo in TITULOS):
-            continue
-        # Fila que repite los títulos (por ejemplo, al cambiar de página)
-        if normalizar(examen["nombre"]) == normalizar(TITULOS["nombre"]):
-            continue
-        if not examen["nombre"]:
-            observaciones.append((numero, "", "Fila con datos pero sin nombre de examen: no se cargó"))
-            continue
-        # Indicación del tecnólogo médico: si "Lab. Derivado" no es un número
-        # (por ejemplo "-" o "NOTA:"), el examen no se considera en la app
-        codigo = examen["codigo_lab_derivado"]
-        if codigo and not codigo.isdigit():
-            observaciones.append((numero, examen["nombre"],
-                                  f'Lab. Derivado dice "{codigo}": excluido, no se cargó'))
-            continue
 
-        examen["codigo_vidalab"] = elegir_codigo_mayor(examen["codigo_vidalab"])
-        examen["codigo_medisyn"] = elegir_codigo_mayor(examen["codigo_medisyn"])
-        examen["estabilidad"] = extraer_estabilidad(examen["instrucciones"])
-        examen["se_procesa_en_recinto"] = int(
-            normalizar(examen["laboratorio"]) == normalizar(LABORATORIO_RECINTO)
-        )
-        # Tubo según las reglas; "" si la app no puede decidirlo sola
-        examen["tubos"] = clasificar(examen["muestra"], examen["nombre"])
-        examen["tubos_automatico"] = examen["tubos"]
-        examenes.append(examen)
+class LectorDeListadoCSV(LectorDeListado):
+    """Lee el listado técnico exportado en CSV UTF-8."""
 
-    return examenes, observaciones
+    def leer(self, ruta):
+        with open(ruta, encoding="utf-8-sig", newline="") as archivo:
+            filas = list(csv.reader(archivo))
+
+        numero_titulos = encontrar_fila_titulos(filas)
+        posiciones = ubicar_columnas(filas[numero_titulos])
+
+        registros = []
+        observaciones = []
+        # La fila del archivo se cuenta desde 1, como en Excel
+        for numero, fila in enumerate(filas[numero_titulos + 1:], start=numero_titulos + 2):
+            registro = {"fila_origen": numero}
+            for campo, posicion in posiciones.items():
+                valor = fila[posicion] if posicion < len(fila) else ""
+                # Los saltos de línea de Windows (\r\n) se dejan como saltos simples (\n),
+                # por si el archivo se editó con el Bloc de notas
+                registro[campo] = valor.replace("\r\n", "\n").strip()
+
+            # Fila totalmente vacía: se ignora
+            if not any(registro[campo] for campo in TITULOS):
+                continue
+            # Fila que repite los títulos (por ejemplo, al cambiar de página)
+            if normalizar(registro["nombre"]) == normalizar(TITULOS["nombre"]):
+                continue
+            if not registro["nombre"]:
+                observaciones.append((numero, "", "Fila con datos pero sin nombre de examen: no se cargó"))
+                continue
+            # Indicación del tecnólogo médico: si "Lab. Derivado" no es un número
+            # (por ejemplo "-" o "NOTA:"), el examen no se considera en la app
+            codigo = registro["codigo_lab_derivado"]
+            if codigo and not codigo.isdigit():
+                observaciones.append((numero, registro["nombre"],
+                                      f'Lab. Derivado dice "{codigo}": excluido, no se cargó'))
+                continue
+
+            registros.append(completar_registro(registro))
+
+        return registros, observaciones
+
+
+def completar_registro(registro):
+    """Agrega a un registro del listado los datos que la app calcula al importar."""
+    registro["codigo_vidalab"] = elegir_codigo_mayor(registro["codigo_vidalab"])
+    registro["codigo_medisyn"] = elegir_codigo_mayor(registro["codigo_medisyn"])
+    registro["estabilidad"] = extraer_estabilidad(registro["instrucciones"])
+    registro["se_procesa_en_recinto"] = int(
+        normalizar(registro["laboratorio"]) == normalizar(LABORATORIO_RECINTO)
+    )
+    # Tubo según las reglas; "" si la app no puede decidirlo sola
+    registro["tubos"] = clasificar(registro["muestra"], registro["nombre"])
+    registro["tubos_automatico"] = registro["tubos"]
+    return registro
 
 
 # ---------- Tabla de tubos por revisar ----------
@@ -243,24 +262,6 @@ def revisar(examenes):
     return observaciones
 
 
-def guardar_en_base(conexion, examenes, archivo, cantidad_observaciones):
-    """Reemplaza los exámenes de la base por los recién leídos."""
-    campos = list(TITULOS) + ["fila_origen", "estabilidad", "se_procesa_en_recinto", "tubos"]
-    marcadores = ", ".join("?" for _ in campos)
-    # "with conexion" guarda todo junto: si algo falla, no queda nada a medias
-    with conexion:
-        conexion.execute("DELETE FROM examenes")
-        conexion.executemany(
-            f"INSERT INTO examenes ({', '.join(campos)}) VALUES ({marcadores})",
-            [[examen[campo] for campo in campos] for examen in examenes],
-        )
-        conexion.execute(
-            "INSERT INTO importaciones (fecha, archivo, examenes_cargados, observaciones) VALUES (?, ?, ?, ?)",
-            (datetime.now().isoformat(timespec="seconds"), Path(archivo).name,
-             len(examenes), cantidad_observaciones),
-        )
-
-
 def escribir_reporte(ruta, observaciones):
     """Escribe el reporte de revisión. utf-8-sig hace que Excel muestre bien las tildes."""
     with open(ruta, "w", encoding="utf-8-sig", newline="") as archivo:
@@ -269,29 +270,54 @@ def escribir_reporte(ruta, observaciones):
         escritor.writerows(sorted(observaciones))
 
 
-def importar(ruta_listado, conexion, ruta_reporte, ruta_tabla_tubos):
-    """Lee el listado, lo guarda en la base y escribe el reporte y la tabla de tubos.
+class Importador:
+    """Carga el listado técnico en la base de datos y genera los reportes de revisión."""
 
-    Devuelve un resumen con conteos.
-    """
-    examenes, observaciones = leer_listado(ruta_listado)
-    completados = leer_tabla_tubos(ruta_tabla_tubos)
-    observaciones += aplicar_tabla_tubos(examenes, completados)
-    observaciones += revisar(examenes)
+    def __init__(self, conexion, lector=None):
+        self.conexion = conexion
+        # El lector se puede cambiar (por ejemplo, uno de Excel) sin tocar esta clase
+        self.lector = lector or LectorDeListadoCSV()
 
-    # Se borra la tabla de exámenes y se crea de nuevo, por si cambiaron sus columnas
-    conexion.execute("DROP TABLE IF EXISTS examenes")
-    crear_tablas(conexion)
-    guardar_en_base(conexion, examenes, ruta_listado, len(observaciones))
-    escribir_reporte(ruta_reporte, observaciones)
-    escribir_tabla_tubos(ruta_tabla_tubos, examenes, completados)
+    def importar(self, ruta_listado, ruta_reporte, ruta_tabla_tubos):
+        """Lee el listado, lo guarda en la base y escribe el reporte y la tabla de tubos.
 
-    return {
-        "examenes": len(examenes),
-        "en_recinto": sum(examen["se_procesa_en_recinto"] for examen in examenes),
-        "observaciones": len(observaciones),
-        "tubo_no_reconocido": sum(examen["tubos"] == "" for examen in examenes),
-    }
+        Devuelve un resumen con conteos.
+        """
+        registros, observaciones = self.lector.leer(ruta_listado)
+        completados = leer_tabla_tubos(ruta_tabla_tubos)
+        observaciones += aplicar_tabla_tubos(registros, completados)
+        observaciones += revisar(registros)
+
+        # Se borra la tabla de exámenes y se crea de nuevo, por si cambiaron sus columnas
+        self.conexion.execute("DROP TABLE IF EXISTS examenes")
+        crear_tablas(self.conexion)
+        self._guardar_en_base(registros, ruta_listado, len(observaciones))
+        escribir_reporte(ruta_reporte, observaciones)
+        escribir_tabla_tubos(ruta_tabla_tubos, registros, completados)
+
+        return {
+            "examenes": len(registros),
+            "en_recinto": sum(registro["se_procesa_en_recinto"] for registro in registros),
+            "observaciones": len(observaciones),
+            "tubo_no_reconocido": sum(registro["tubos"] == "" for registro in registros),
+        }
+
+    def _guardar_en_base(self, registros, archivo, cantidad_observaciones):
+        """Reemplaza los exámenes de la base por los recién leídos."""
+        campos = list(TITULOS) + ["fila_origen", "estabilidad", "se_procesa_en_recinto", "tubos"]
+        marcadores = ", ".join("?" for _ in campos)
+        # "with conexion" guarda todo junto: si algo falla, no queda nada a medias
+        with self.conexion:
+            self.conexion.execute("DELETE FROM examenes")
+            self.conexion.executemany(
+                f"INSERT INTO examenes ({', '.join(campos)}) VALUES ({marcadores})",
+                [[registro[campo] for campo in campos] for registro in registros],
+            )
+            self.conexion.execute(
+                "INSERT INTO importaciones (fecha, archivo, examenes_cargados, observaciones) VALUES (?, ?, ?, ?)",
+                (datetime.now().isoformat(timespec="seconds"), Path(archivo).name,
+                 len(registros), cantidad_observaciones),
+            )
 
 
 @click.command("importar")
@@ -305,7 +331,7 @@ def comando_importar(ruta_listado):
 
     conexion = conectar(ruta_base)
     try:
-        resumen = importar(ruta_listado, conexion, ruta_reporte, ruta_tabla_tubos)
+        resumen = Importador(conexion).importar(ruta_listado, ruta_reporte, ruta_tabla_tubos)
     except ErrorDeImportacion as error:
         raise click.ClickException(str(error))
     finally:

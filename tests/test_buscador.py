@@ -2,8 +2,10 @@
 
 import pytest
 
-from app.buscador import buscar, cargar_examenes, etiqueta_procesamiento, preparar_examen
+from app.buscador import Buscador
+from app.examen import Examen
 from app.modelos import conectar
+from app.repositorio import RepositorioDeExamenes
 from tests.conftest import cargar_examenes_de_prueba
 
 
@@ -11,13 +13,17 @@ from tests.conftest import cargar_examenes_de_prueba
 def examenes(ruta_base):
     cargar_examenes_de_prueba(ruta_base)
     conexion = conectar(ruta_base)
-    lista = cargar_examenes(conexion)
+    lista = RepositorioDeExamenes(conexion).todos()
     conexion.close()
     return lista
 
 
+def buscar(consulta, examenes):
+    return Buscador(examenes).buscar(consulta)
+
+
 def nombres(resultados):
-    return [examen["nombre"] for examen in resultados]
+    return [examen.nombre for examen in resultados]
 
 
 # ---------- Búsqueda ----------
@@ -74,7 +80,7 @@ def test_sinonimo_entre_parentesis_cuenta_como_nombre_principal():
         "GLUCOSA TEST DE TOLERANCIA 3 MUESTRAS BASAL 1 HORA Y 2 HRS", "GLUCOSA TEST DE TOLERANCIA PROLONGADO 5 MUESTRAS",
         "GLICEMIA (GLUCOSA EN SANGRE)", "HORMONA DEL CRECIMIENTO POST ESTIMULO DE GLUCOSA",
     ]
-    examenes = [preparar_examen({"nombre": n}) for n in nombres_examenes]
+    examenes = [Examen(nombre=n) for n in nombres_examenes]
     resultado = nombres(buscar("glucosa", examenes))
     assert "GLICEMIA (GLUCOSA EN SANGRE)" in resultado
     # Un examen que solo menciona glucosa en medio del nombre no sube
@@ -82,7 +88,7 @@ def test_sinonimo_entre_parentesis_cuenta_como_nombre_principal():
 
 
 def test_letra_y_numero_con_o_sin_guion():
-    vitamina = [preparar_examen({"nombre": "VITAMINA B-12 (COBALAMINA)"})]
+    vitamina = [Examen(nombre="VITAMINA B-12 (COBALAMINA)")]
     assert nombres(buscar("b12", vitamina)) == ["VITAMINA B-12 (COBALAMINA)"]
     assert nombres(buscar("vitamina b-12", vitamina)) == ["VITAMINA B-12 (COBALAMINA)"]
 
@@ -109,18 +115,18 @@ def test_muestra_como_maximo_8_sugerencias(examenes):
 # ---------- Etiqueta recinto / derivación ----------
 
 def test_etiqueta_recinto():
-    examen = {"laboratorio": "Laboratorio Clínica Dávila Vespucio", "se_procesa_en_recinto": 1}
-    assert etiqueta_procesamiento(examen) == {"tipo": "recinto", "texto": "Se procesa en el recinto"}
+    examen = Examen(nombre="EXAMEN PRUEBA", laboratorio="Laboratorio Clínica Dávila Vespucio", se_procesa_en_recinto=1)
+    assert examen.etiqueta == {"tipo": "recinto", "texto": "Se procesa en el recinto"}
 
 
 def test_etiqueta_deriva_con_nombre_del_laboratorio():
-    examen = {"laboratorio": "Laboratorio Externo Prueba", "se_procesa_en_recinto": 0}
-    assert etiqueta_procesamiento(examen) == {"tipo": "deriva", "texto": "Se deriva a Laboratorio Externo Prueba"}
+    examen = Examen(nombre="EXAMEN PRUEBA", laboratorio="Laboratorio Externo Prueba", se_procesa_en_recinto=0)
+    assert examen.etiqueta == {"tipo": "deriva", "texto": "Se deriva a Laboratorio Externo Prueba"}
 
 
 def test_etiqueta_sin_laboratorio_dice_dato_no_disponible():
-    examen = {"laboratorio": "", "se_procesa_en_recinto": 0}
-    assert etiqueta_procesamiento(examen) == {"tipo": "aviso", "texto": "Laboratorio: dato no disponible"}
+    examen = Examen(nombre="EXAMEN PRUEBA", laboratorio="", se_procesa_en_recinto=0)
+    assert examen.etiqueta == {"tipo": "aviso", "texto": "Laboratorio: dato no disponible"}
 
 
 # ---------- Sugerencias desde la pantalla ----------

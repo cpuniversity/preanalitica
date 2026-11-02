@@ -11,111 +11,134 @@ Reglas (definidas por el tecnólogo médico):
 - Ayuno y protección de la luz: solo advertencias, con la frase original del listado.
 """
 
+from dataclasses import dataclass, field
+
 from app.texto import normalizar
-from app.tubos import OTRA_MUESTRA, TIPOS_DE_TUBO, FormatoDeTuboInvalido, frases_con, leer_tubos
+from app.tubos import TIPOS_DE_TUBO, TipoDeTubo
 
 
-def agregar_advertencias(examen):
-    """Agrega al examen las frases del listado sobre ayuno y luz (sin interpretarlas)."""
-    instrucciones = examen.get("instrucciones") or ""
-    muestra = examen.get("muestra") or ""
-    examen["ayuno"] = frases_con(instrucciones, r"ayun")
-    examen["luz"] = frases_con(muestra + "\n" + instrucciones, r"\bluz\b")
-    return examen
+@dataclass
+class Contenedor:
+    """Un tubo (o varios tubos iguales), frasco o jeringa, con los exámenes que lleva."""
+
+    tipo: TipoDeTubo
+    cantidad: int            # cuántos tubos iguales (el laboratorio puede pedir 2 o más)
+    laboratorio: str
+    en_recinto: bool
+    examenes: list = field(default_factory=list)
+    numero: int | None = None  # posición en el orden de extracción (se asigna al ordenar)
+
+    def agregar(self, examen):
+        self.examenes.append(examen)
+
+    @property
+    def nombre_tubo(self):
+        return self.tipo.nombre
+
+    @property
+    def orden(self):
+        return self.tipo.orden
+
+    @property
+    def proteger_luz(self):
+        """Si un examen debe protegerse de la luz, se protege el tubo completo."""
+        return any(examen.luz for examen in self.examenes)
 
 
-def agrupar(examenes):
-    """Recibe los exámenes elegidos y devuelve el resumen de tubos.
+@dataclass
+class ResumenDeTubos:
+    """Lo que ve la enfermera en la pantalla de tubos."""
 
-    Cada examen es un diccionario con al menos: nombre, laboratorio,
-    se_procesa_en_recinto, tubos, muestra e instrucciones.
-    """
-    contenedores = []   # cada uno: un tubo (o varios iguales), frasco o jeringa
-    compartibles = {}   # (tipo, laboratorio) -> contenedor que otros exámenes pueden usar
-    otras_muestras = []
-    sin_tubo = []
-    con_alternativas = []
+    tubos: list              # Contenedor en orden de extracción, numerados
+    punciones_aparte: list   # Contenedor fuera del orden (gases arteriales)
+    otras_muestras: list     # Examen que no son sangre
+    sin_tubo: list           # Examen con "Tubo: dato no disponible"
+    examenes: list           # todos los exámenes elegidos
 
-    def clave_laboratorio(examen):
+    @property
+    def total_tubos(self):
+        return sum(contenedor.cantidad for contenedor in self.tubos)
+
+    @property
+    def total_punciones_aparte(self):
+        return sum(contenedor.cantidad for contenedor in self.punciones_aparte)
+
+    @property
+    def examenes_con_ayuno(self):
+        return [examen for examen in self.examenes if examen.ayuno]
+
+
+class Agrupador:
+    """Aplica las reglas de agrupación de tubos a los exámenes elegidos."""
+
+    def agrupar(self, examenes):
+        """Recibe los exámenes elegidos (Examen) y devuelve un ResumenDeTubos."""
+        self._contenedores = []
+        self._compartibles = {}   # (tipo, laboratorio) -> Contenedor que otros exámenes pueden usar
+        otras_muestras = []
+        sin_tubo = []
+        con_alternativas = []
+
+        # 1) Separar por tipo de muestra y ubicar los exámenes con un solo tubo posible
+        for examen in examenes:
+            if examen.es_otra_muestra():
+                otras_muestras.append(examen)
+                continue
+            opciones = examen.opciones_de_tubo()
+            if not opciones:
+                sin_tubo.append(examen)  # "Tubo: dato no disponible"
+            elif len(opciones) == 1:
+                for tipo, cantidad in opciones[0]:
+                    self._poner_en_tubo(examen, tipo, cantidad)
+            else:
+                con_alternativas.append((examen, opciones))
+
+        # 2) Exámenes con varios tubos posibles: la opción que agregue menos tubos.
+        #    Si hay empate, min() se queda con la primera de la lista.
+        for examen, opciones in con_alternativas:
+            laboratorio = self._clave_laboratorio(examen)
+            elegida = min(opciones, key=lambda opcion: self._tubos_nuevos(opcion, laboratorio))
+            for tipo, cantidad in elegida:
+                self._poner_en_tubo(examen, tipo, cantidad)
+
+        # 3) Ordenar según CLSI. Con el mismo tubo: primero el recinto, luego por laboratorio
+        en_orden = sorted(
+            (c for c in self._contenedores if not c.tipo.es_puncion_aparte()),
+            key=lambda c: (c.orden, not c.en_recinto, normalizar(c.laboratorio)),
+        )
+        for numero, contenedor in enumerate(en_orden, start=1):
+            contenedor.numero = numero
+
+        return ResumenDeTubos(
+            tubos=en_orden,
+            punciones_aparte=[c for c in self._contenedores if c.tipo.es_puncion_aparte()],
+            otras_muestras=otras_muestras,
+            sin_tubo=sin_tubo,
+            examenes=list(examenes),
+        )
+
+    def _clave_laboratorio(self, examen):
         # Sin laboratorio no se sabe a dónde va: ese examen no comparte tubo
-        return normalizar(examen["laboratorio"] or "") or None
+        return normalizar(examen.laboratorio) or None
 
-    def es_compartible(tipo, cantidad, laboratorio):
-        return not TIPOS_DE_TUBO[tipo]["exclusivo"] and cantidad == 1 and laboratorio is not None
+    def _es_compartible(self, tipo, cantidad, laboratorio):
+        return not TIPOS_DE_TUBO[tipo].exclusivo and cantidad == 1 and laboratorio is not None
 
-    def tubos_nuevos(opcion, laboratorio):
+    def _tubos_nuevos(self, opcion, laboratorio):
         """Cuántos tubos nuevos habría que agregar si se elige esta opción."""
         return sum(
-            0 if es_compartible(tipo, cantidad, laboratorio) and (tipo, laboratorio) in compartibles
+            0 if self._es_compartible(tipo, cantidad, laboratorio) and (tipo, laboratorio) in self._compartibles
             else cantidad
             for tipo, cantidad in opcion
         )
 
-    def poner_en_tubo(examen, tipo, cantidad):
-        laboratorio = clave_laboratorio(examen)
-        if es_compartible(tipo, cantidad, laboratorio) and (tipo, laboratorio) in compartibles:
-            compartibles[(tipo, laboratorio)]["examenes"].append(examen)
+    def _poner_en_tubo(self, examen, tipo, cantidad):
+        laboratorio = self._clave_laboratorio(examen)
+        if self._es_compartible(tipo, cantidad, laboratorio) and (tipo, laboratorio) in self._compartibles:
+            self._compartibles[(tipo, laboratorio)].agregar(examen)
             return
-        contenedor = {
-            "tipo": tipo,
-            "nombre_tubo": TIPOS_DE_TUBO[tipo]["nombre"],
-            "orden": TIPOS_DE_TUBO[tipo]["orden"],
-            "cantidad": cantidad,
-            "laboratorio": examen["laboratorio"],
-            "en_recinto": bool(examen["se_procesa_en_recinto"]),
-            "examenes": [examen],
-        }
-        contenedores.append(contenedor)
-        if es_compartible(tipo, cantidad, laboratorio):
-            compartibles[(tipo, laboratorio)] = contenedor
-
-    # Copia de cada examen con sus advertencias (no se modifica lo recibido)
-    preparados = [agregar_advertencias(dict(examen)) for examen in examenes]
-
-    # 1) Separar por tipo de muestra y ubicar los exámenes con un solo tubo posible
-    for examen in preparados:
-        if examen["tubos"] == OTRA_MUESTRA:
-            otras_muestras.append(examen)
-            continue
-        try:
-            opciones = leer_tubos(examen["tubos"]) if examen["tubos"] else None
-        except FormatoDeTuboInvalido:
-            opciones = None
-        if not opciones:
-            sin_tubo.append(examen)  # "Tubo: dato no disponible"
-        elif len(opciones) == 1:
-            for tipo, cantidad in opciones[0]:
-                poner_en_tubo(examen, tipo, cantidad)
-        else:
-            con_alternativas.append((examen, opciones))
-
-    # 2) Exámenes con varios tubos posibles: la opción que agregue menos tubos.
-    #    Si hay empate, min() se queda con la primera de la lista.
-    for examen, opciones in con_alternativas:
-        laboratorio = clave_laboratorio(examen)
-        elegida = min(opciones, key=lambda opcion: tubos_nuevos(opcion, laboratorio))
-        for tipo, cantidad in elegida:
-            poner_en_tubo(examen, tipo, cantidad)
-
-    # 3) Ordenar según CLSI. Con el mismo tubo: primero el recinto, luego por laboratorio
-    en_orden = sorted(
-        (c for c in contenedores if c["orden"] is not None),
-        key=lambda c: (c["orden"], not c["en_recinto"], normalizar(c["laboratorio"] or "")),
-    )
-    for numero, contenedor in enumerate(en_orden, start=1):
-        contenedor["numero"] = numero
-    punciones_aparte = [c for c in contenedores if c["orden"] is None]
-
-    # Si un examen debe protegerse de la luz, se protege el tubo completo
-    for contenedor in contenedores:
-        contenedor["proteger_luz"] = any(examen["luz"] for examen in contenedor["examenes"])
-
-    return {
-        "tubos": en_orden,
-        "punciones_aparte": punciones_aparte,
-        "otras_muestras": otras_muestras,
-        "sin_tubo": sin_tubo,
-        "total_tubos": sum(c["cantidad"] for c in en_orden),
-        "total_punciones_aparte": sum(c["cantidad"] for c in punciones_aparte),
-        "examenes_con_ayuno": [examen for examen in preparados if examen["ayuno"]],
-    }
+        contenedor = Contenedor(TIPOS_DE_TUBO[tipo], cantidad, examen.laboratorio, examen.se_procesa_en_recinto)
+        contenedor.agregar(examen)
+        self._contenedores.append(contenedor)
+        if self._es_compartible(tipo, cantidad, laboratorio):
+            self._compartibles[(tipo, laboratorio)] = contenedor

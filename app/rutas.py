@@ -7,11 +7,12 @@ from datetime import datetime
 from flask import (Blueprint, current_app, jsonify, redirect, render_template,
                    request, session, url_for)
 
-from app.agrupador import agrupar
-from app.auditoria import registrar
-from app.buscador import buscar, cargar_examenes, etiqueta_procesamiento, nombre_en_una_linea
-from app.derivaciones import revisar_derivaciones
+from app.agrupador import Agrupador
+from app.auditoria import Auditoria
+from app.buscador import Buscador
+from app.derivaciones import RevisorDeEstabilidad
 from app.modelos import conectar, crear_tablas
+from app.repositorio import RepositorioDeExamenes
 
 paginas = Blueprint("paginas", __name__)
 
@@ -78,24 +79,6 @@ def abrir_base():
     return conexion
 
 
-def leer_seleccionados(conexion):
-    """Devuelve los exámenes elegidos por la enfermera, en el orden en que los agregó."""
-    seleccionados = []
-    for id_examen in session.get("seleccion", []):
-        fila = conexion.execute(
-            "SELECT id, nombre, laboratorio, se_procesa_en_recinto, muestra, instrucciones, tubos, "
-            "dias_proceso, tiempo_respuesta, estabilidad "
-            "FROM examenes WHERE id = ?",
-            (id_examen,),
-        ).fetchone()
-        if fila:  # si el listado se volvió a importar, un id antiguo puede ya no existir
-            examen = dict(fila)
-            examen["nombre"] = nombre_en_una_linea(examen["nombre"])
-            examen["etiqueta"] = etiqueta_procesamiento(examen)
-            seleccionados.append(examen)
-    return seleccionados
-
-
 @paginas.route("/examenes")
 def examenes():
     """Paso 2: buscar y elegir exámenes."""
@@ -103,8 +86,9 @@ def examenes():
     if "enfermera" not in session:
         return redirect(url_for("paginas.ingreso"))
     with closing(abrir_base()) as conexion:
-        hay_listado = conexion.execute("SELECT COUNT(*) FROM examenes").fetchone()[0] > 0
-        seleccionados = leer_seleccionados(conexion)
+        repositorio = RepositorioDeExamenes(conexion)
+        hay_listado = repositorio.hay_listado()
+        seleccionados = repositorio.por_ids(session.get("seleccion", []))
     return render_template(
         "examenes.html", paso=2, enfermera=session["enfermera"],
         hay_listado=hay_listado, seleccionados=seleccionados,
@@ -118,14 +102,14 @@ def sugerencias():
         return jsonify({"error": "Debe identificarse primero"}), 401
     consulta = request.args.get("q", "")
     with closing(abrir_base()) as conexion:
-        encontrados = buscar(consulta, cargar_examenes(conexion))
+        encontrados = Buscador(RepositorioDeExamenes(conexion).todos()).buscar(consulta)
     seleccion = session.get("seleccion", [])
     return jsonify([
         {
-            "id": examen["id"],
-            "nombre": examen["nombre"],
-            "etiqueta": etiqueta_procesamiento(examen),
-            "ya_seleccionado": examen["id"] in seleccion,
+            "id": examen.id,
+            "nombre": examen.nombre,
+            "etiqueta": examen.etiqueta,
+            "ya_seleccionado": examen.id in seleccion,
         }
         for examen in encontrados
     ])
@@ -138,7 +122,7 @@ def agregar_examen():
         return redirect(url_for("paginas.ingreso"))
     id_examen = request.form.get("id", type=int)
     with closing(abrir_base()) as conexion:
-        existe = conexion.execute("SELECT 1 FROM examenes WHERE id = ?", (id_examen,)).fetchone()
+        existe = RepositorioDeExamenes(conexion).existe(id_examen)
     seleccion = session.get("seleccion", [])
     if existe and id_examen not in seleccion:
         # Se asigna la lista completa para que Flask note el cambio en la sesión
@@ -161,24 +145,24 @@ def tubos():
         return redirect(url_for("paginas.ingreso"))
     ahora = datetime.now()
     with closing(abrir_base()) as conexion:
-        seleccionados = leer_seleccionados(conexion)
+        seleccionados = RepositorioDeExamenes(conexion).por_ids(session.get("seleccion", []))
         # Sin exámenes elegidos no hay nada que mostrar
         if not seleccionados:
             return redirect(url_for("paginas.examenes"))
-        resumen = agrupar(seleccionados)
-        derivados = revisar_derivaciones(seleccionados, ahora)
+        resumen = Agrupador().agrupar(seleccionados)
+        derivados = RevisorDeEstabilidad().revisar_derivados(seleccionados, ahora)
 
         # Auditoría: se registra el resultado entregado. Si se recarga la
         # pantalla con los mismos exámenes, no se registra de nuevo.
         if session.get("ultima_auditada") != session["seleccion"]:
-            registrar(conexion, session["enfermera"], seleccionados, resumen, derivados, ahora)
+            Auditoria(conexion).registrar(session["enfermera"], seleccionados, resumen, derivados, ahora)
             session["ultima_auditada"] = list(session["seleccion"])
 
     return render_template(
         "tubos.html", paso=3, enfermera=session["enfermera"],
         resumen=resumen, derivados=derivados,
         # Para mostrar en cada tubo una etiqueta con la estabilidad de sus exámenes derivados
-        veredictos={d["examen"]["id"]: d for d in derivados},
+        veredictos={d.examen.id: d for d in derivados},
         fecha=ahora.strftime("%d-%m-%Y %H:%M"),
     )
 

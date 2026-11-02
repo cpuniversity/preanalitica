@@ -7,36 +7,53 @@ from datetime import date, datetime
 import pytest
 
 from app import create_app
+from app.agrupador import Contenedor, ResumenDeTubos
 from app.auditoria import (
+    Auditoria,
+    CorreoDePrueba,
+    CorreoSMTP,
+    EnviadorDeCorreo,
     ErrorDeEnvio,
-    enviar_correo,
-    envio_semanal,
-    exportar,
-    registrar,
     resumir,
     revisar_envio_automatico,
     semana_anterior,
 )
+from app.derivaciones import RevisionDeDerivacion
+from app.examen import Examen
+from app.tubos import TIPOS_DE_TUBO
 from app.modelos import conectar, crear_tablas
 from tests.conftest import cargar_examenes_de_prueba
 
 # Noviembre 2026: lunes 2, lunes 9, miércoles 11
 LUNES_9 = date(2026, 11, 9)
 
-RESUMEN = {
-    "total_tubos": 2,
-    "tubos": [
-        {"numero": 1, "cantidad": 1, "nombre_tubo": "Tubo amarillo con gel", "en_recinto": False,
-         "laboratorio": "Laboratorio Externo Prueba", "examenes": [{"nombre": "FERRITINA"}]},
-        {"numero": 2, "cantidad": 2, "nombre_tubo": "Tubo lila (EDTA)", "en_recinto": True,
-         "laboratorio": "Laboratorio Clínica Dávila Vespucio",
-         "examenes": [{"nombre": "HEMOGRAMA"}, {"nombre": "VHS"}]},
+FERRITINA = Examen(nombre="FERRITINA", laboratorio="Laboratorio Externo Prueba")
+RESUMEN = ResumenDeTubos(
+    tubos=[
+        Contenedor(TIPOS_DE_TUBO["amarillo"], 1, "Laboratorio Externo Prueba", False, [FERRITINA], numero=1),
+        Contenedor(TIPOS_DE_TUBO["lila"], 2, "Laboratorio Clínica Dávila Vespucio", True,
+                   [Examen(nombre="HEMOGRAMA"), Examen(nombre="VHS")], numero=2),
     ],
-    "punciones_aparte": [],
-    "otras_muestras": [{"nombre": "ORINA COMPLETA"}],
-    "sin_tubo": [],
-}
-DERIVADOS = [{"examen": {"nombre": "FERRITINA"}, "resultado": "no_alcanza", "dia_proceso_nombre": "lunes 9/11"}]
+    punciones_aparte=[],
+    otras_muestras=[Examen(nombre="ORINA COMPLETA")],
+    sin_tubo=[],
+    examenes=[],
+)
+DERIVADOS = [RevisionDeDerivacion(examen=FERRITINA, resultado="no_alcanza", dias_proceso_texto="Lunes",
+                                  estabilidad_texto="", dia_proceso=date(2026, 11, 9))]
+
+
+class EnviadorFalso(EnviadorDeCorreo):
+    """Enviador de prueba: anota lo que se le pide enviar, o falla si se le indica."""
+
+    def __init__(self, falla=False):
+        self.enviados = []
+        self.falla = falla
+
+    def enviar(self, asunto, cuerpo, adjunto):
+        if self.falla:
+            raise ErrorDeEnvio("servidor caído")
+        self.enviados.append((asunto, cuerpo, adjunto))
 
 CONFIG_PRUEBA = {"destinatarios": ["direccion.de.prueba@example.com"], "remitente": "app@example.com",
                  "servidor": "", "puerto": 587, "usuario": "", "clave": "", "modo_prueba": True}
@@ -51,7 +68,7 @@ def conexion(tmp_path):
 
 
 def registrar_en(conexion, momento, enfermera="Ana Soto"):
-    registrar(conexion, enfermera, [{"nombre": "FERRITINA"}], RESUMEN, DERIVADOS, momento)
+    Auditoria(conexion).registrar(enfermera, [FERRITINA], RESUMEN, DERIVADOS, momento)
 
 
 def cantidad_registros(conexion):
@@ -62,7 +79,8 @@ def cantidad_registros(conexion):
 
 def test_resumen_del_resultado_entregado():
     datos = resumir(RESUMEN, DERIVADOS)
-    assert datos["total_tubos"] == 2
+    # El total se calcula sumando los tubos: 1 amarillo + 2 lila
+    assert datos["total_tubos"] == 3
     assert datos["tubos_en_orden"] == (
         "1. Tubo amarillo con gel (Laboratorio Externo Prueba): FERRITINA; "
         "2. 2 × Tubo lila (EDTA) (recinto): HEMOGRAMA, VHS"
@@ -151,7 +169,7 @@ def test_exportar_solo_lo_anterior_a_esta_semana(conexion, tmp_path):
     registrar_en(conexion, datetime(2026, 11, 9, 0, 1))  # ya es la semana actual
     ruta = tmp_path / "auditoria.csv"
 
-    assert exportar(conexion, LUNES_9, ruta) == 2
+    assert Auditoria(conexion).exportar(LUNES_9, ruta) == 2
     with open(ruta, encoding="utf-8-sig", newline="") as archivo:
         filas = list(csv.reader(archivo, delimiter=";"))
     assert filas[0][:3] == ["Fecha", "Hora", "Enfermera"]
@@ -163,12 +181,11 @@ def test_exportar_solo_lo_anterior_a_esta_semana(conexion, tmp_path):
 def test_envio_exitoso_borra_lo_enviado_y_conserva_la_semana_actual(conexion, tmp_path):
     registrar_en(conexion, datetime(2026, 11, 3, 10, 0))
     registrar_en(conexion, datetime(2026, 11, 9, 8, 0))
-    enviados = []
+    enviador = EnviadorFalso()
 
-    resultado = envio_semanal(conexion, LUNES_9, CONFIG_PRUEBA, tmp_path,
-                              enviar=lambda *datos: enviados.append(datos))
+    resultado = Auditoria(conexion).envio_semanal(LUNES_9, enviador, tmp_path)
 
-    assert len(enviados) == 1
+    assert len(enviador.enviados) == 1
     assert resultado["registros"] == 1
     assert resultado["archivo"].name == "auditoria_2026-11-02.csv"
     assert resultado["archivo"].exists()  # el CSV se conserva como respaldo
@@ -176,32 +193,28 @@ def test_envio_exitoso_borra_lo_enviado_y_conserva_la_semana_actual(conexion, tm
 
 
 def test_no_se_envia_dos_veces_la_misma_semana(conexion, tmp_path):
-    enviados = []
-    envio_semanal(conexion, LUNES_9, CONFIG_PRUEBA, tmp_path, enviar=lambda *d: enviados.append(d))
-    segundo = envio_semanal(conexion, date(2026, 11, 11), CONFIG_PRUEBA, tmp_path,
-                            enviar=lambda *d: enviados.append(d))
+    enviador = EnviadorFalso()
+    Auditoria(conexion).envio_semanal(LUNES_9, enviador, tmp_path)
+    segundo = Auditoria(conexion).envio_semanal(date(2026, 11, 11), enviador, tmp_path)
     assert segundo is None
-    assert len(enviados) == 1
+    assert len(enviador.enviados) == 1
 
 
 def test_si_el_correo_falla_no_se_borra_nada(conexion, tmp_path):
     registrar_en(conexion, datetime(2026, 11, 3, 10, 0))
 
-    def falla(*datos):
-        raise ErrorDeEnvio("servidor caído")
-
     with pytest.raises(ErrorDeEnvio):
-        envio_semanal(conexion, LUNES_9, CONFIG_PRUEBA, tmp_path, enviar=falla)
+        Auditoria(conexion).envio_semanal(LUNES_9, EnviadorFalso(falla=True), tmp_path)
     assert cantidad_registros(conexion) == 1
     # Como no quedó marcado como enviado, se reintenta más tarde
     assert conexion.execute("SELECT COUNT(*) FROM envios_auditoria").fetchone()[0] == 0
 
 
 def test_semana_sin_consultas_igual_se_informa(conexion, tmp_path):
-    enviados = []
-    resultado = envio_semanal(conexion, LUNES_9, CONFIG_PRUEBA, tmp_path, enviar=lambda *d: enviados.append(d))
+    enviador = EnviadorFalso()
+    resultado = Auditoria(conexion).envio_semanal(LUNES_9, enviador, tmp_path)
     assert resultado["registros"] == 0
-    assert len(enviados) == 1
+    assert len(enviador.enviados) == 1
 
 
 # ---------- Correo ----------
@@ -210,7 +223,7 @@ def test_modo_prueba_guarda_el_correo_como_archivo(tmp_path):
     adjunto = tmp_path / "auditoria_2026-11-02.csv"
     adjunto.write_text("Fecha;Hora\n", encoding="utf-8-sig")
 
-    ruta = enviar_correo(CONFIG_PRUEBA, "Asunto de prueba", "Cuerpo", adjunto, tmp_path)
+    ruta = CorreoDePrueba(CONFIG_PRUEBA, tmp_path).enviar("Asunto de prueba", "Cuerpo", adjunto)
 
     mensaje = email.message_from_bytes(ruta.read_bytes())
     assert mensaje["To"] == "direccion.de.prueba@example.com"
@@ -223,14 +236,14 @@ def test_sin_destinatarios_no_se_envia(tmp_path):
     adjunto = tmp_path / "a.csv"
     adjunto.write_text("x")
     with pytest.raises(ErrorDeEnvio, match="destinatarios"):
-        enviar_correo({**CONFIG_PRUEBA, "destinatarios": []}, "A", "B", adjunto, tmp_path)
+        CorreoDePrueba({**CONFIG_PRUEBA, "destinatarios": []}, tmp_path).enviar("A", "B", adjunto)
 
 
 def test_envio_real_sin_servidor_configurado_avisa(tmp_path):
     adjunto = tmp_path / "a.csv"
     adjunto.write_text("x")
     with pytest.raises(ErrorDeEnvio, match="servidor"):
-        enviar_correo({**CONFIG_PRUEBA, "modo_prueba": False}, "A", "B", adjunto, tmp_path)
+        CorreoSMTP({**CONFIG_PRUEBA, "modo_prueba": False}).enviar("A", "B", adjunto)
 
 
 def test_envio_real_usa_el_servidor_configurado(tmp_path, monkeypatch):
@@ -256,7 +269,7 @@ def test_envio_real_usa_el_servidor_configurado(tmp_path, monkeypatch):
     adjunto.write_text("x")
     config = {**CONFIG_PRUEBA, "modo_prueba": False, "servidor": "smtp.example.com", "usuario": "usuario"}
 
-    enviar_correo(config, "A", "B", adjunto, tmp_path)
+    CorreoSMTP(config).enviar("A", "B", adjunto)
 
     assert enviados == [("conexion", "smtp.example.com", 587), "starttls", ("login", "usuario"),
                         ("mensaje", "direccion.de.prueba@example.com")]

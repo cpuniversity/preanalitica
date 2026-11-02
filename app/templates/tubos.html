@@ -101,7 +101,7 @@
   {% if resumen.tubos %}
     <ol class="tubos">
       {% for tubo in resumen.tubos %}
-        <li class="tubo tubo-{{ tubo.tipo }}">
+        <li class="tubo tubo-{{ tubo.tipo.codigo }}">
           <span class="tubo-numero" aria-hidden="true">{{ tubo.numero }}</span>
           <div class="tubo-detalle">
             <div class="tubo-titulo">
@@ -132,7 +132,7 @@
     <p class="texto-secundario">Fuera del orden de extracción venosa</p>
     <ul class="tubos">
       {% for tubo in resumen.punciones_aparte %}
-        <li class="tubo tubo-{{ tubo.tipo }}">
+        <li class="tubo tubo-{{ tubo.tipo.codigo }}">
           <span class="tubo-numero" aria-hidden="true">A</span>
           <div class="tubo-detalle">
             <div class="tubo-titulo">
