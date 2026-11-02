@@ -106,18 +106,22 @@ Preanalitica/
   .env.example         # ejemplo de configuración del correo (el .env real no va a Git)
   docs/
     requisitos.md      # requisitos, decisiones y estado del proyecto
+    arquitectura.md    # capas, componentes, patrones de diseño y SOLID
+    uml/               # casos de uso, secuencia, clases y matriz de trazabilidad (Mermaid)
     tabla_de_tubos.md  # guía para que el tecnólogo médico complete la tabla de tubos
   app/
     __init__.py        # crea la app Flask
     rutas.py           # páginas, endpoints y páginas de error
     modelos.py         # tablas de la base de datos
+    repositorio.py     # RepositorioDeExamenes: único acceso a los exámenes en la base
     texto.py           # normalizar texto (minúsculas, sin tildes)
-    importador.py      # lee el CSV, carga la base y genera los reportes de revisión
-    buscador.py        # búsqueda y sugerencias
-    tubos.py           # tipos de tubo, orden CLSI y lectura del tubo desde el listado
-    agrupador.py       # agrupación de tubos y excepciones
-    derivaciones.py    # días de proceso y estabilidad
-    auditoria.py       # registro y envío semanal
+    examen.py          # Examen
+    tubos.py           # TipoDeTubo, orden CLSI y lectura del tubo desde el listado
+    importador.py      # Importador, LectorDeListado: lee el CSV y genera los reportes de revisión
+    buscador.py        # Buscador
+    agrupador.py       # Agrupador, Contenedor, ResumenDeTubos
+    derivaciones.py    # RevisorDeEstabilidad, CalendarioDeProceso, Estabilidad
+    auditoria.py       # Auditoria, EnviadorDeCorreo (CorreoDePrueba, CorreoSMTP)
     templates/         # base, ingreso, examenes, tubos, error
     static/            # estilos.css, buscador.js, icono.svg
   tests/
@@ -148,6 +152,7 @@ Hay una maqueta de tres pantallas (Ingreso, Búsqueda de exámenes, Resumen de t
 - Después de cada funcionalidad: corre las pruebas y explica qué probar a mano en el navegador.
 - Las pruebas usan exámenes inventados y una base temporal; nunca el listado real ni la base de `data/`. Nunca se envía un correo real en las pruebas.
 - Código simple y legible, con nombres en español y comentarios breves en español sencillo, pensados para alguien que está aprendiendo. Evita abstracciones innecesarias.
+- Diseño orientado a objetos (lo pide la pauta del curso): la lógica vive en clases del dominio (ver `docs/arquitectura.md`). Las rutas no escriben SQL: usan `RepositorioDeExamenes`. Si se agrega o cambia una clase o un método, se actualizan los diagramas de `docs/uml/` para que código y diagramas no se contradigan.
 - No agregues librerías sin avisar y explicar para qué sirven.
 - Explica los cambios con claridad, como a una persona que sabe mucho de laboratorio y está aprendiendo programación.
 

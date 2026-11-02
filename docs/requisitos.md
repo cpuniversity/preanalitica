@@ -99,7 +99,7 @@ Todas las decisiones están detalladas en `CLAUDE.md`. Resumen:
 
 ## 8. Estado actual
 
-Las seis etapas de la versión 1 están implementadas y con pruebas automáticas (235 pruebas, todas pasan):
+Las seis etapas de la versión 1 están implementadas y con pruebas automáticas (245 pruebas, todas pasan). La lógica está organizada en clases del dominio; ver `docs/arquitectura.md` y los diagramas UML en `docs/uml/`:
 
 | Etapa | Estado |
 |---|---|
