@@ -130,8 +130,28 @@ def test_derivado_sin_estabilidad_muestra_un_solo_aviso(ruta_base, cliente_con_e
                   dias_proceso="LU A DO")
     agregar(cliente_con_examenes, "derivado prueba")
     html = cliente_con_examenes.get("/tubos").get_data(as_text=True)
-    assert "<strong>Estabilidad según el listado:</strong>\n              dato no disponible. Consultar con el laboratorio" in html
+    assert "<strong>Estabilidad según el listado:</strong>\n              dato no disponible. Consultar con el laboratorio.</div>" in html
     assert "<strong>Estabilidad: dato no disponible</strong>" not in html
+    # Tampoco va en el tubo: el detalle de abajo ya lo explica
+    assert "Estabilidad: dato no disponible · ver detalle" not in html
+
+
+def test_detalle_de_derivados_termina_en_punto(ruta_base, cliente_con_examenes):
+    cargar_examen(ruta_base, "DERIVADO PRUEBA", "amarillo", laboratorio="Laboratorio Externo Prueba",
+                  dias_proceso="LU A DO", estabilidad="Refrigerado 7 días.")
+    agregar(cliente_con_examenes, "derivado prueba")
+    html = cliente_con_examenes.get("/tubos").get_data(as_text=True)
+    # "Se procesaría: Martes 3/11. La muestra no tendría que esperar guardada."
+    assert "guardada.</dd>" in html or "antes de procesarse.</dd>" in html
+    # El texto del listado lleva un solo punto final, aunque el listado ya traiga uno
+    assert "Refrigerado 7 días.</div>" in html
+
+
+def test_otras_muestras_sin_subtitulo(cliente_con_examenes):
+    agregar(cliente_con_examenes, "orina completa")
+    html = cliente_con_examenes.get("/tubos").get_data(as_text=True)
+    assert "<h2>Otras muestras</h2>" in html
+    assert "No son de sangre" not in html
 
 
 def test_estabilidad_que_no_sirve_para_decidir_mantiene_el_aviso(ruta_base, cliente_con_examenes):

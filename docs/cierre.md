@@ -34,7 +34,7 @@ jefatura.
 | Exámenes del listado cargados | 620 (173 se procesan en el recinto y 447 se derivan) |
 | Historias de usuario | 19 con criterios de aceptación, más 4 tareas de la entrega final (HU-20 a HU-23); 75 de 81 puntos terminados |
 | Iteraciones | I0 a I7 terminadas (31/10 al 02/11); I8 en curso |
-| Pruebas automáticas | 255, todas pasan, también en GitHub Actions en cada `push` |
+| Pruebas automáticas | 257, todas pasan, también en GitHub Actions en cada `push` |
 | Commits en `main` | 22, contando el de este borrador |
 | Documentación | Requisitos verificables, arquitectura, UML (casos de uso, secuencia, clases y trazabilidad), gestión ágil, plan e informe de pruebas, plan de despliegue |
 

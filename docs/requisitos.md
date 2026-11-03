@@ -99,7 +99,7 @@ cuando el tecnólogo médico valide la app con casos reales (HU-20).
 | ID | Requisito | Prioridad | Verificación |
 |---|---|---|---|
 | RF-5.1 | El resumen muestra el total de tubos y los tubos numerados con su laboratorio y sus exámenes | Must | P: `test_buscador.py`: `test_pantalla_de_tubos_agrupa_y_ordena`, `test_ver_tubos_muestra_los_examenes_elegidos` |
-| RF-5.2 | El tubo de un examen derivado lleva la etiqueta de su revisión de estabilidad | Must | P: `test_derivado_lleva_etiqueta_de_estabilidad_en_su_tubo`; `test_derivaciones.py`: `test_textos_para_la_pantalla` |
+| RF-5.2 | El tubo de un examen derivado lleva la etiqueta de su revisión de estabilidad, salvo cuando la estabilidad no está disponible (lo explica el detalle de abajo) | Must | P: `test_derivado_lleva_etiqueta_de_estabilidad_en_su_tubo`, `test_derivado_sin_estabilidad_muestra_un_solo_aviso`; `test_derivaciones.py`: `test_textos_para_la_pantalla` |
 | RF-5.3 | Los botones "Volver a exámenes", "Imprimir resumen" y "Nueva consulta" aparecen una sola vez, al final; "Nueva consulta" borra la selección | Must | P: `test_botones_una_sola_vez_al_final`; `test_buscador.py`: `test_nueva_consulta_borra_la_seleccion` |
 | RF-5.4 | Sin exámenes elegidos no se muestra el resumen | Should | P: `test_buscador.py`: `test_ver_tubos_sin_examenes_vuelve_al_buscador` |
 | RF-5.5 | El resumen impreso es compacto y se lee completo | Should | D: imprimir un resumen con varios tubos, avisos y derivados |
@@ -147,7 +147,7 @@ comprobar.
 | RNF-1 | Legibilidad para turnos de noche | Texto en pantalla de al menos 17 px (base de 18 px); campos de 54 a 60 px de alto; botones principales de 56 px; botones secundarios de al menos 44 px; esquinas de 10 a 16 px | Must | I: `app/static/estilos.css`. D: revisión en el navegador |
 | RNF-2 | Nunca solo el color | Cada tubo y cada etiqueta llevan su nombre en texto; la muestra de color es solo un apoyo | Must | I: plantillas `tubos.html` y `examenes.html`. D: revisión en el navegador |
 | RNF-3 | Accesibilidad | El buscador se usa con flechas, Enter y Escape; toda la app se recorre con Tab; las alertas usan `role="alert"` y el estado del buscador `aria-live` | Should | I: `buscador.js` y plantillas. D: recorrer la app solo con el teclado |
-| RNF-4 | Textos sin punto final | Ningún texto que se muestra termina en punto; los puntos entre dos frases se mantienen | Should | P: `test_interfaz.py`: `test_filtro_sin_punto`, `test_textos_de_la_pantalla_de_tubos_sin_punto_final` |
+| RNF-4 | Textos sin punto final | Ningún texto que se muestra termina en punto; los puntos entre dos frases se mantienen. Excepción: en el detalle de los derivados, "Se procesaría" y "Estabilidad según el listado" terminan en punto | Should | P: `test_interfaz.py`: `test_filtro_sin_punto`, `test_textos_de_la_pantalla_de_tubos_sin_punto_final`, `test_detalle_de_derivados_termina_en_punto` |
 | RNF-5 | Interfaz en español | Las pantallas, los títulos y las páginas de error están en español | Must | P: `test_interfaz.py`: `test_cada_pantalla_tiene_su_titulo`, `test_pagina_no_encontrada_en_espanol` |
 | RNF-6 | Privacidad de pacientes | La app no pide ni guarda ningún dato de pacientes; la base no tiene columnas para ellos | Must | P: `test_auditoria.py`: `test_la_tabla_no_tiene_datos_del_paciente`. I: `app/modelos.py` |
 | RNF-7 | Confidencialidad del listado | El listado real, la base, la auditoría y el `.env` no están en Git; al importar, la consola muestra solo conteos | Must | I: `.gitignore` y `git ls-files` (ningún archivo de `data/` ni `.env`). P: `test_importador.py`: `test_comando_importar_muestra_solo_conteos` |
@@ -186,7 +186,7 @@ Todas las decisiones están detalladas en `CLAUDE.md`. Resumen:
 
 ## 8. Estado actual
 
-Las seis etapas de la versión 1 están implementadas y con pruebas automáticas (255 pruebas, todas pasan). La lógica está organizada en clases del dominio; ver `docs/arquitectura.md` y los diagramas UML en `docs/uml/`:
+Las seis etapas de la versión 1 están implementadas y con pruebas automáticas (257 pruebas, todas pasan). La lógica está organizada en clases del dominio; ver `docs/arquitectura.md` y los diagramas UML en `docs/uml/`:
 
 | Etapa | Estado |
 |---|---|

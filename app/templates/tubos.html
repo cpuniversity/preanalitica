@@ -7,8 +7,9 @@
 {# Muestra la etiqueta de laboratorio (recinto / deriva / dato no disponible) #}
 {% macro etiqueta(e) %}<span class="etiqueta etiqueta-{{ e.tipo }}">{{ e.texto }}</span>{% endmacro %}
 
-{# Etiqueta corta con el resultado de estabilidad de un derivado; lleva a su detalle más abajo #}
-{% macro etiqueta_estabilidad(d) %}
+{# Etiqueta corta con el resultado de estabilidad de un derivado; lleva a su detalle más abajo.
+   Si la estabilidad no está disponible no se muestra: el detalle de abajo ya lo explica #}
+{% macro etiqueta_estabilidad(d) %}{% if d.resultado != "no_disponible" %}
   {% set textos = {
     "alcanza": ("bien", "Estabilidad: lo permite"),
     "al_limite": ("aviso", "Estabilidad: al límite"),
@@ -19,7 +20,7 @@
   } %}
   {% set tipo, texto = textos[d.resultado] %}
   <a class="etiqueta etiqueta-{{ tipo }}" href="#derivado-{{ d.examen.id }}">{{ texto }} · ver detalle</a>
-{% endmacro %}
+{% endif %}{% endmacro %}
 
 {# Ayuno y luz al lado del nombre del examen, destacados, con la frase tal como la escribe el listado.
    Si una misma frase habla de ayuno y de luz, se muestra una sola vez #}
@@ -144,7 +145,6 @@
 
   {% if resumen.otras_muestras %}
     <h2>Otras muestras</h2>
-    <p class="texto-secundario">No son de sangre: no entran en el orden de extracción, pero deben tomarse igual</p>
     <ul class="tubos">
       {% for examen in resumen.otras_muestras %}
         <li class="tubo">
@@ -184,7 +184,8 @@
               <dd>{{ d.dias_proceso_texto }}</dd>
               {% if d.dia_proceso_nombre %}
                 <dt>Se procesaría</dt>
-                <dd>{{ d.dia_proceso_nombre|capitalize }}. {{ guardada|capitalize }}</dd>
+                {# En el detalle de los derivados las frases sí terminan en punto #}
+                <dd>{{ d.dia_proceso_nombre|capitalize }}. {{ guardada|capitalize }}.</dd>
               {% endif %}
               {% if d.resultado == "segun_demanda" %}
                 <dt>Resultado en</dt>
@@ -221,7 +222,7 @@
 
             {# Si el listado no trae estabilidad, esta línea es el aviso: no se repite arriba #}
             <div class="frase-listado"><strong>Estabilidad según el listado:</strong>
-              {{ d.estabilidad_texto|sin_punto or "dato no disponible. Consultar con el laboratorio" }}</div>
+              {{ d.estabilidad_texto|sin_punto or "dato no disponible. Consultar con el laboratorio" }}.</div>
           </div>
         </li>
       {% endfor %}
