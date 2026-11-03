@@ -37,7 +37,11 @@ nombres válidos en `test_ingreso.py`); `pytest` cuenta cada caso por separado.
 |---|---|---|---|
 | Computador del equipo | Windows 11 | 3.13.2 | ✔ 245 pasan |
 | Copia limpia del repositorio, sin `data/` ni `.env` (como la ve GitHub) | Windows 11 | 3.13.2 | ✔ 245 pasan, sin dejar archivos |
-| GitHub Actions | Ubuntu (Linux) | 3.13 | [pendiente: primera ejecución] |
+| GitHub Actions, primera ejecución ([ver en GitHub](https://github.com/cpuniversity/preanalitica/actions/runs/41552922051)), commit `00e7df1` | Ubuntu (Linux) | 3.13 | ✔ 245 pasan, en 17 segundos en total |
+
+Desde entonces, cada `push` queda con su propia ejecución en la pestaña
+[Actions](https://github.com/cpuniversity/preanalitica/actions/workflows/pruebas.yml)
+del repositorio.
 
 La copia limpia confirma que las pruebas no dependen del listado real, de la
 base local ni de la configuración del correo.
