@@ -130,7 +130,7 @@ def test_derivado_sin_estabilidad_muestra_un_solo_aviso(ruta_base, cliente_con_e
                   dias_proceso="LU A DO")
     agregar(cliente_con_examenes, "derivado prueba")
     html = cliente_con_examenes.get("/tubos").get_data(as_text=True)
-    assert "<strong>Estabilidad según el listado:</strong>\n              dato no disponible. Consultar con el laboratorio.</div>" in html
+    assert "<strong>Estabilidad según el listado:</strong>\n              Dato no disponible. Consultar con el laboratorio.</div>" in html
     assert "<strong>Estabilidad: dato no disponible</strong>" not in html
     # Tampoco va en el tubo: el detalle de abajo ya lo explica
     assert "Estabilidad: dato no disponible · ver detalle" not in html
