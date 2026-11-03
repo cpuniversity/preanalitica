@@ -108,6 +108,7 @@ Preanalitica/
     requisitos.md      # requisitos, decisiones y estado del proyecto
     arquitectura.md    # capas, componentes, patrones de diseño y SOLID
     uml/               # casos de uso, secuencia, clases y matriz de trazabilidad (Mermaid)
+    gestion_agil/      # objetivo del producto, backlog, historias de usuario e iteraciones
     tabla_de_tubos.md  # guía para que el tecnólogo médico complete la tabla de tubos
   app/
     __init__.py        # crea la app Flask
