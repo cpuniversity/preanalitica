@@ -82,7 +82,7 @@ que espera la decisión del tecnólogo médico.
 | Historia o tarea | Responsable | Estado |
 |---|---|---|
 | HU-18 CI con GitHub Actions y plan de pruebas | [por asignar] | ✔ Hecha (02/11) |
-| HU-19 Plan de despliegue y operación | [por asignar] | Por hacer |
+| HU-19 Plan de despliegue y operación | [por asignar] | ✔ Hecha (02/11) |
 | HU-20 Completar los 47 tubos y validar con casos reales | Tecnólogo médico | Por hacer |
 | HU-22 Configurar el correo real | [por asignar] | Por hacer |
 | HU-23 Cierre del proyecto y presentación final | Todo el equipo | Por hacer |

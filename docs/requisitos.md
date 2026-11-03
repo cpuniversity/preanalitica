@@ -213,4 +213,4 @@ Del equipo:
 - Revisar la impresión del resumen.
 - Configurar el servidor de correo real en `.env` cuando corresponda.
 
-Para un uso real (fuera de la versión 1): inicio de sesión, instalación en un servidor del hospital, respaldos y un procedimiento para actualizar el listado.
+Para un uso real (fuera de la versión 1): inicio de sesión, instalación en un servidor del hospital, respaldos y un procedimiento para actualizar el listado. Todo esto está descrito en el plan de despliegue y operación (`docs/despliegue.md`).

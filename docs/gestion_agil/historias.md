@@ -212,9 +212,10 @@ Los criterios usan el formato **Dado / Cuando / Entonces**.
 | 2 | Las pruebas corren sin el listado real, la base local ni el `.env` | Copia limpia del repositorio y GitHub Actions: 245 pasan |
 | 3 | Existe un plan de pruebas y un informe de resultados | `docs/plan_de_pruebas.md`, `docs/informe_de_pruebas.md` |
 
-### HU-19 Plan de despliegue y operación (pendiente)
+### HU-19 Plan de despliegue y operación
 **Como** jefatura de laboratorio **quiero** un plan para instalar, respaldar, monitorear y mantener la app **para** saber qué se necesita para usarla en el hospital.
 
-| # | Criterio de aceptación |
-|---|---|
-| 1 | Existe un documento con ambientes, recursos, estrategia de entrega, monitoreo, mantenimiento e impacto en las usuarias |
+| # | Criterio de aceptación | Verificación |
+|---|---|---|
+| 1 | Existe un documento con ambientes, recursos, estrategia de entrega, monitoreo, mantenimiento e impacto en las usuarias | `docs/despliegue.md`, secciones 1, 2, 4, 6, 7 y 9 |
+| 2 | El documento incluye respaldos y el procedimiento para actualizar el listado técnico | `docs/despliegue.md`, secciones 5 y 7 |

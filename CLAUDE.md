@@ -111,6 +111,7 @@ Preanalitica/
     requisitos.md      # requisitos, decisiones y estado del proyecto
     plan_de_pruebas.md # qué se prueba, cómo y criterios de aprobación
     informe_de_pruebas.md # resultados de las pruebas y ejecuciones en GitHub Actions
+    despliegue.md      # plan de despliegue y operación: ambientes, respaldos, monitoreo, mantenimiento
     arquitectura.md    # capas, componentes, patrones de diseño y SOLID
     uml/               # casos de uso, secuencia, clases y matriz de trazabilidad (Mermaid)
     gestion_agil/      # objetivo del producto, backlog, historias de usuario e iteraciones
