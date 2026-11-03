@@ -63,6 +63,23 @@ def test_muestras_que_no_son_sangre(muestra):
 
 
 @pytest.mark.parametrize("muestra", [
+    "1 FRASCO CON MUESTRA DE DEPOSICIÓN FRESCA EN FRASCO ESTERIL",
+    "1 FRASCO CON ORINA DE SEGUNDO CHORRO",
+    "2 FRASCOS DEPOSICION",
+])
+def test_frasco_con_muestra_que_no_es_sangre_es_otra_muestra(muestra):
+    assert clasificar(muestra, "EXAMEN PRUEBA") == OTRA_MUESTRA
+
+
+@pytest.mark.parametrize("muestra, esperado", [
+    ("2 FRASCOS HEMOCULTIVO", "2 hemocultivo"),  # el frasco de hemocultivo sigue siendo sangre
+    ("1 FRASCO ESPECIAL", ""),                   # no se sabe qué muestra es: no se adivina
+])
+def test_frasco_sin_otra_muestra_no_cambia(muestra, esperado):
+    assert clasificar(muestra, "EXAMEN PRUEBA") == esperado
+
+
+@pytest.mark.parametrize("muestra", [
     "SANGRE, TUBO AMARILLO O ROJO CON GEL 5 ML",   # alternativas
     "SANGRE, TUBO TAPA LILA Y TUBO TAPA CELESTE",  # dos tubos distintos
     "SANGRE, FRASCO ESPECIAL",                     # ninguno conocido

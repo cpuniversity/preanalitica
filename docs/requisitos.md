@@ -76,7 +76,7 @@ cuando el tecnólogo médico valide la app con casos reales (HU-20).
 | RF-3.4 | Si el laboratorio pide 2 o más tubos para un examen, esos tubos son solo de ese examen y se suman al total | Must | P: `test_dos_tubos_de_un_examen_mas_uno_de_otro_son_tres`, `test_examen_que_necesita_dos_tubos_distintos`; `test_tubos.py`: `test_cantidad_de_tubos_que_pide_el_laboratorio` |
 | RF-3.5 | Los tubos se numeran en el orden CLSI: hemocultivo, celeste, amarillo con gel, rojo, verde, jeringa de gases venosos, lila, gris; con el mismo tubo, primero el del recinto | Must | P: `test_orden_de_extraccion_clsi`, `test_mismo_tubo_primero_el_recinto` |
 | RF-3.6 | Hemocultivo y gases venosos van en su propio contenedor; los gases arteriales son una punción aparte, fuera del orden | Must | P: `test_hemocultivo_nunca_se_comparte`, `test_gases_venosos_nunca_se_comparten`, `test_gases_arteriales_son_puncion_aparte_fuera_del_orden`; `test_tubos.py`: `test_gases_arteriales_y_venosos_se_distinguen_por_el_nombre` |
-| RF-3.7 | Las muestras que no son sangre van en "Otras muestras", fuera del orden y sin contar como tubo | Should | P: `test_otras_muestras_van_aparte_y_no_cuentan_como_tubo`; `test_tubos.py`: `test_muestras_que_no_son_sangre` |
+| RF-3.7 | Las muestras que no son sangre van en "Otras muestras", fuera del orden y sin contar como tubo | Should | P: `test_otras_muestras_van_aparte_y_no_cuentan_como_tubo`; `test_tubos.py`: `test_muestras_que_no_son_sangre`, `test_frasco_con_muestra_que_no_es_sangre_es_otra_muestra`, `test_frasco_sin_otra_muestra_no_cambia` |
 | RF-3.8 | Ayuno se advierte con la frase original del listado; protección de la luz es una advertencia sobre el tubo; hielo no se muestra. En la pantalla, el ayuno y la luz van al lado del nombre del examen, destacados y entre paréntesis | Should | P: `test_ayuno_es_advertencia_con_la_frase_del_listado`, `test_proteccion_de_la_luz_es_advertencia_sobre_el_tubo_completo`, `test_hielo_no_se_muestra_a_enfermeria`; `test_tubos.py`: `test_frases_se_copian_tal_cual`; `test_interfaz.py`: `test_ayuno_y_luz_van_al_lado_del_examen_y_no_en_un_recuadro_arriba`, `test_frase_con_ayuno_y_luz_se_muestra_una_vez` |
 | RF-3.9 | Si el texto trae indicación para adultos y pediátricos, se usa la de adultos | Must | P: `test_tubos.py`: `test_solo_se_considera_la_parte_de_adultos` |
 | RF-3.10 | Si la app no reconoce el tubo, muestra "Tubo: dato no disponible · consulte con el laboratorio" en una tarjeta propia por examen, después de los tubos numerados; nunca lo adivina | Must | P: `test_tubo_no_disponible_se_avisa_y_no_se_adivina`; `test_tubos.py`: `test_si_no_es_claro_no_adivina`, `test_muestra_vacia_es_dato_no_disponible`; `test_interfaz.py`: `test_examen_sin_tubo_va_en_su_tarjeta_despues_de_los_tubos` |
@@ -186,7 +186,7 @@ Todas las decisiones están detalladas en `CLAUDE.md`. Resumen:
 
 ## 8. Estado actual
 
-Las seis etapas de la versión 1 están implementadas y con pruebas automáticas (250 pruebas, todas pasan). La lógica está organizada en clases del dominio; ver `docs/arquitectura.md` y los diagramas UML en `docs/uml/`:
+Las seis etapas de la versión 1 están implementadas y con pruebas automáticas (255 pruebas, todas pasan). La lógica está organizada en clases del dominio; ver `docs/arquitectura.md` y los diagramas UML en `docs/uml/`:
 
 | Etapa | Estado |
 |---|---|
@@ -204,7 +204,7 @@ Datos del listado actual: 620 exámenes (173 se procesan en el recinto y 447 se 
 ## 9. Pendientes
 
 Con el tecnólogo médico:
-- Completar los 47 exámenes de `data/tubos_por_revisar.csv` (guía en `docs/tabla_de_tubos.md`). Mientras tanto aparecen como "Tubo: dato no disponible".
+- Completar los 46 exámenes de `data/tubos_por_revisar.csv` (guía en `docs/tabla_de_tubos.md`). Mientras tanto aparecen como "Tubo: dato no disponible".
 - Revisar el reporte de revisión, en especial los derivados sin estabilidad en el listado.
 - Probar la aplicación con casos reales y validar los resultados de agrupación, orden y estabilidad.
 - Decidir si se quiere una lista de exámenes frecuentes que aparezcan primero en el buscador.

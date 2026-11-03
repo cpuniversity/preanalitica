@@ -34,7 +34,7 @@ jefatura.
 | Exámenes del listado cargados | 620 (173 se procesan en el recinto y 447 se derivan) |
 | Historias de usuario | 19 con criterios de aceptación, más 4 tareas de la entrega final (HU-20 a HU-23); 75 de 81 puntos terminados |
 | Iteraciones | I0 a I7 terminadas (31/10 al 02/11); I8 en curso |
-| Pruebas automáticas | 250, todas pasan, también en GitHub Actions en cada `push` |
+| Pruebas automáticas | 255, todas pasan, también en GitHub Actions en cada `push` |
 | Commits en `main` | 22, contando el de este borrador |
 | Documentación | Requisitos verificables, arquitectura, UML (casos de uso, secuencia, clases y trazabilidad), gestión ágil, plan e informe de pruebas, plan de despliegue |
 
@@ -92,9 +92,10 @@ impacto en el diseño fueron:
 |---|---|
 | El listado no es una tabla limpia: trae encabezados del documento antes de los títulos y mucho texto libre | El importador busca la fila de títulos y ubica cada columna por su nombre, no por su posición |
 | Excel daña el listado (mete cada línea en una sola celda) y aparecen saltos de línea de Windows dentro de las celdas | Regla de nunca abrirlo con Excel; el importador limpia los saltos de línea |
-| El tubo viene escrito de 145 formas distintas | La app reconoce las formas claras y las dudosas van a `tubos_por_revisar.csv` para el tecnólogo médico (47 exámenes quedaron pendientes) |
+| El tubo viene escrito de 145 formas distintas | La app reconoce las formas claras y las dudosas van a `tubos_por_revisar.csv` para el tecnólogo médico (46 exámenes pendientes; en I8 se corrigió la lectura de "1 frasco con muestra de deposición") |
 | La estabilidad no tiene columna propia y se escribe de muchas maneras | Se lee del texto de las instrucciones; dos formatos que se leían mal se corrigieron y quedaron como pruebas |
 | "glucosa" no encontraba la glicemia | Los sinónimos entre paréntesis pasaron a contar como nombre del examen |
+| "1 frasco con muestra de deposición" se leía como sangre (la regla de "1 frasco" era para hemocultivo) | Si después del frasco viene una muestra que no es sangre, va a "Otras muestras"; se revisaron los 620 exámenes y solo cambió ese |
 | Muchas reglas clínicas dependían de decisiones que no estaban escritas | Antes de cada iteración se preguntó al tecnólogo médico y cada respuesta quedó en la documentación |
 | Pasar el código ya hecho a clases sin cambiar el comportamiento | Las pruebas anteriores siguieron pasando y 40 pantallas comparadas quedaron idénticas |
 | [El equipo puede agregar otras dificultades: de organización, de tiempo, de coordinación] | |
@@ -118,7 +119,7 @@ Borrador para que el equipo lo revise:
 
 | Pendiente | Responsable | Historia |
 |---|---|---|
-| Completar los 47 tubos de `data/tubos_por_revisar.csv` | Tecnólogo médico | HU-20 |
+| Completar los 46 tubos de `data/tubos_por_revisar.csv` | Tecnólogo médico | HU-20 |
 | Validar la app con casos reales | Tecnólogo médico | HU-20 |
 | Configurar y probar el correo real de la auditoría | [por asignar] | HU-22 |
 | Decidir si se quieren exámenes frecuentes primero en el buscador | Tecnólogo médico | HU-21 |

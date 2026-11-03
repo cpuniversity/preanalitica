@@ -37,7 +37,7 @@ historia están en [historias.md](historias.md).
 |---|---|---|---|---|---|---|
 | HU-18 | Pruebas automáticas en cada cambio (CI) y plan de pruebas | E7 Calidad | Must (pauta) | 2 | I8 | ✔ Terminada |
 | HU-19 | Plan de despliegue y operación | E7 Calidad | Must (pauta) | 3 | I8 | ✔ Terminada |
-| HU-20 | El tecnólogo médico completa los 47 tubos y valida con casos reales | E5 Datos | Must | 2 | I8 | Por hacer (depende del tecnólogo médico) |
+| HU-20 | El tecnólogo médico completa los 46 tubos y valida con casos reales | E5 Datos | Must | 2 | I8 | Por hacer (depende del tecnólogo médico) |
 | HU-22 | Configurar el correo real de la auditoría | E6 Auditoría | Should | 1 | I8 | Por hacer |
 | HU-23 | Cierre del proyecto y presentación final | E7 Calidad | Must (pauta) | 3 | I8 | En curso (borrador de cierre) |
 | HU-21 | Exámenes frecuentes primero en el buscador | E2 Búsqueda | Could | 2 | — | Esperando decisión del tecnólogo médico |

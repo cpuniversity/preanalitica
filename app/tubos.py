@@ -84,6 +84,15 @@ def es_otra_muestra(texto):
     return bool(re.match(PATRON_OTRA_MUESTRA, texto))
 
 
+def es_frasco_de_otra_muestra(texto):
+    """¿Es un frasco con una muestra que no es sangre? Ej.: "1 frasco con muestra de deposición".
+
+    "1 frasco" al comienzo se lee como sangre (hemocultivo), así que se mira lo que viene después.
+    """
+    resto = re.sub(r"^\d+\s*frascos?\s+(con\s+)?(muestra\s+de\s+)?", "", texto)
+    return resto != texto and "hemocultivo" not in texto and es_otra_muestra(resto)
+
+
 def tubos_mencionados(muestra):
     """Lista los tipos de tubo que menciona el texto (solo la parte de adultos)."""
     texto = parte_de_adultos(normalizar(muestra))
@@ -104,6 +113,8 @@ def clasificar(muestra, nombre_examen):
     texto = parte_de_adultos(normalizar(muestra))
     if not texto:
         return ""  # el listado no dice la muestra: dato no disponible
+    if es_frasco_de_otra_muestra(texto):
+        return OTRA_MUESTRA
     if not es_sangre(texto):
         if es_otra_muestra(texto):
             return OTRA_MUESTRA
