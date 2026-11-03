@@ -33,4 +33,5 @@ en `data/`.
 - [Gestión ágil](docs/gestion_agil/): objetivo, backlog, historias e iteraciones
 - [Plan de pruebas](docs/plan_de_pruebas.md) e [informe de resultados](docs/informe_de_pruebas.md)
 - [Plan de despliegue y operación](docs/despliegue.md)
+- [Cierre del proyecto](docs/cierre.md) (borrador)
 - [Guía de la tabla de tubos](docs/tabla_de_tubos.md) para el tecnólogo médico
