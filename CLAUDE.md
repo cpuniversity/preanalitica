@@ -103,9 +103,14 @@ Si algo no está en este documento, pregunta antes de implementarlo.
 ```
 Preanalitica/
   CLAUDE.md
+  README.md            # presentación del repositorio e insignia de las pruebas
   .env.example         # ejemplo de configuración del correo (el .env real no va a Git)
+  .github/workflows/
+    pruebas.yml        # GitHub Actions: corre pytest en cada push
   docs/
     requisitos.md      # requisitos, decisiones y estado del proyecto
+    plan_de_pruebas.md # qué se prueba, cómo y criterios de aprobación
+    informe_de_pruebas.md # resultados de las pruebas y ejecuciones en GitHub Actions
     arquitectura.md    # capas, componentes, patrones de diseño y SOLID
     uml/               # casos de uso, secuencia, clases y matriz de trazabilidad (Mermaid)
     gestion_agil/      # objetivo del producto, backlog, historias de usuario e iteraciones

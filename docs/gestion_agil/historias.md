@@ -203,12 +203,14 @@ Los criterios usan el formato **Dado / Cuando / Entonces**.
 | 1 | El comportamiento no cambia | Las 235 pruebas anteriores pasan y 40 pantallas comparadas son idénticas |
 | 2 | Los métodos de los diagramas de secuencia existen en las clases | `docs/uml/` revisado contra `app/` |
 
-### HU-18 Pruebas automáticas en cada cambio (pendiente)
+### HU-18 Pruebas automáticas en cada cambio
 **Como** equipo **queremos** que las pruebas corran solas en cada `push` a GitHub **para** detectar errores apenas se suben los cambios.
 
-| # | Criterio de aceptación |
-|---|---|
-| 1 | **Dado** un `push` a GitHub, **cuando** termina, **entonces** GitHub muestra si las pruebas pasan |
+| # | Criterio de aceptación | Verificación |
+|---|---|---|
+| 1 | **Dado** un `push` a GitHub, **cuando** termina, **entonces** GitHub muestra si las pruebas pasan | `.github/workflows/pruebas.yml`, insignia "Pruebas" en el `README.md` |
+| 2 | Las pruebas corren sin el listado real, la base local ni el `.env` | Copia limpia del repositorio y GitHub Actions: 245 pasan |
+| 3 | Existe un plan de pruebas y un informe de resultados | `docs/plan_de_pruebas.md`, `docs/informe_de_pruebas.md` |
 
 ### HU-19 Plan de despliegue y operación (pendiente)
 **Como** jefatura de laboratorio **quiero** un plan para instalar, respaldar, monitorear y mantener la app **para** saber qué se necesita para usarla en el hospital.

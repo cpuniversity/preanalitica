@@ -1,0 +1,30 @@
+# Integración continua: GitHub corre las pruebas automáticas en cada push.
+# Si alguna prueba falla, GitHub lo marca con una cruz roja en el commit.
+# Las pruebas usan exámenes inventados y una base temporal: no necesitan el
+# listado real, la base de data/ ni el archivo .env, y nunca envían correos.
+
+name: Pruebas
+
+on:
+  push:
+  # Permite correrlas a mano desde la pestaña "Actions" de GitHub
+  workflow_dispatch:
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Instalar las librerías del proyecto
+        run: pip install -r requirements.txt
+
+      - name: Correr las pruebas
+        run: pytest -v

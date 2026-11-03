@@ -110,6 +110,8 @@ Las seis etapas de la versión 1 están implementadas y con pruebas automáticas
 | Auditoría | Completa (en modo prueba) |
 | Pulido de interfaz | Completa |
 
+GitHub Actions corre las pruebas en cada `push` (`.github/workflows/pruebas.yml`). El plan de pruebas y el informe de resultados están en `docs/plan_de_pruebas.md` y `docs/informe_de_pruebas.md`.
+
 Datos del listado actual: 620 exámenes (173 se procesan en el recinto y 447 se derivan).
 
 ## 9. Pendientes
