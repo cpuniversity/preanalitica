@@ -88,5 +88,5 @@ que espera la decisión del tecnólogo médico.
 | HU-23 Cierre del proyecto y presentación final | Todo el equipo | Por hacer |
 | Mostrar el avance al ayudante e incorporar su retroalimentación | Todo el equipo | Por hacer |
 
-**Forma de trabajo desde I8:** cada cambio en una rama propia con Pull Request,
-revisado y aprobado por otro integrante antes de juntarlo con `main`.
+**Forma de trabajo en I8:** los cambios se hacen directamente en `main`, uno por
+commit, con las pruebas automáticas pasando antes de cada commit.

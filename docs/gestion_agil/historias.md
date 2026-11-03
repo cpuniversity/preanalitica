@@ -204,11 +204,11 @@ Los criterios usan el formato **Dado / Cuando / Entonces**.
 | 2 | Los métodos de los diagramas de secuencia existen en las clases | `docs/uml/` revisado contra `app/` |
 
 ### HU-18 Pruebas automáticas en cada cambio (pendiente)
-**Como** equipo **queremos** que las pruebas corran solas en cada `push` y Pull Request **para** detectar errores antes de juntar cambios.
+**Como** equipo **queremos** que las pruebas corran solas en cada `push` a GitHub **para** detectar errores apenas se suben los cambios.
 
 | # | Criterio de aceptación |
 |---|---|
-| 1 | **Dado** un Pull Request, **cuando** se abre, **entonces** GitHub muestra si las pruebas pasan |
+| 1 | **Dado** un `push` a GitHub, **cuando** termina, **entonces** GitHub muestra si las pruebas pasan |
 
 ### HU-19 Plan de despliegue y operación (pendiente)
 **Como** jefatura de laboratorio **quiero** un plan para instalar, respaldar, monitorear y mantener la app **para** saber qué se necesita para usarla en el hospital.
