@@ -62,7 +62,7 @@ h1 { font-size: 28px; font-weight: 600; margin: 0 0 4px; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
 }
 .paso-activo { color: var(--texto); font-weight: 600; }

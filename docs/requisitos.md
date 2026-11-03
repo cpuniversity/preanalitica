@@ -144,7 +144,7 @@ comprobar.
 
 | ID | Requisito | Criterio medible | Prioridad | Verificación |
 |---|---|---|---|---|
-| RNF-1 | Legibilidad para turnos de noche | Texto en pantalla de al menos 17 px (base de 18 px); campos de 54 a 60 px de alto; botones principales de 56 px; botones secundarios de al menos 44 px; esquinas de 10 a 16 px | Must | I: `app/static/estilos.css`. D: revisión en el navegador. **Observación:** el número dentro del círculo de cada paso de la cabecera mide 15 px (el título del paso mide 18 px) |
+| RNF-1 | Legibilidad para turnos de noche | Texto en pantalla de al menos 17 px (base de 18 px); campos de 54 a 60 px de alto; botones principales de 56 px; botones secundarios de al menos 44 px; esquinas de 10 a 16 px | Must | I: `app/static/estilos.css`. D: revisión en el navegador |
 | RNF-2 | Nunca solo el color | Cada tubo y cada etiqueta llevan su nombre en texto; la muestra de color es solo un apoyo | Must | I: plantillas `tubos.html` y `examenes.html`. D: revisión en el navegador |
 | RNF-3 | Accesibilidad | El buscador se usa con flechas, Enter y Escape; toda la app se recorre con Tab; las alertas usan `role="alert"` y el estado del buscador `aria-live` | Should | I: `buscador.js` y plantillas. D: recorrer la app solo con el teclado |
 | RNF-4 | Textos sin punto final | Ningún texto que se muestra termina en punto; los puntos entre dos frases se mantienen | Should | P: `test_interfaz.py`: `test_filtro_sin_punto`, `test_textos_de_la_pantalla_de_tubos_sin_punto_final` |
