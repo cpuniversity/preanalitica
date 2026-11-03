@@ -320,6 +320,16 @@ a.boton-principal {
 .tubo-etiquetas { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
 .tubo-examenes { margin: 0; padding-left: 20px; }
 .tubo-examenes li { margin: 4px 0; }
+/* Ayuno o luz al lado del nombre del examen: la frase del listado, destacada */
+.aviso-examen {
+  background: var(--aviso-fondo);
+  color: var(--aviso-texto);
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 6px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
 .frase-listado { color: var(--texto-secundario); font-size: 17px; margin-top: 4px; }
 .etiqueta-seccion { background: #E9EEF1; color: #2B3A46; }
 

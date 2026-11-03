@@ -1,5 +1,21 @@
 """Pruebas del pulido de interfaz: títulos, navegación, ícono, errores y pantalla de tubos."""
 
+from app.modelos import conectar
+
+RECINTO = "Laboratorio Clínica Dávila Vespucio"
+
+
+def cargar_examen(ruta_base, nombre, tubos, laboratorio=RECINTO, instrucciones="", dias_proceso="", estabilidad=""):
+    """Agrega a la base temporal un examen inventado con los datos que necesita la prueba."""
+    conexion = conectar(ruta_base)
+    with conexion:
+        conexion.execute(
+            "INSERT INTO examenes (fila_origen, nombre, laboratorio, se_procesa_en_recinto, tubos, muestra, "
+            "instrucciones, dias_proceso, estabilidad) VALUES (100, ?, ?, ?, ?, 'MUESTRA DE PRUEBA.', ?, ?, ?)",
+            (nombre, laboratorio, 1 if laboratorio == RECINTO else 0, tubos, instrucciones, dias_proceso, estabilidad),
+        )
+    conexion.close()
+
 
 def agregar(cliente, consulta):
     id_examen = cliente.get(f"/examenes/sugerencias?q={consulta}").get_json()[0]["id"]
@@ -78,6 +94,54 @@ def test_examen_del_recinto_no_lleva_etiqueta_de_estabilidad(cliente_con_examene
     agregar(cliente_con_examenes, "hemograma")
     html = cliente_con_examenes.get("/tubos").get_data(as_text=True)
     assert "ver detalle" not in html
+
+
+def test_ayuno_y_luz_van_al_lado_del_examen_y_no_en_un_recuadro_arriba(ruta_base, cliente_con_examenes):
+    cargar_examen(ruta_base, "PROTEINAS PRUEBA", "amarillo", instrucciones="8 HRS AYUNO.\nProteger de la luz.")
+    agregar(cliente_con_examenes, "proteinas prueba")
+    html = cliente_con_examenes.get("/tubos").get_data(as_text=True)
+    # La frase del listado, destacada y entre paréntesis, junto al nombre
+    assert 'PROTEINAS PRUEBA <span class="aviso-examen">(8 HRS AYUNO. Proteger de la luz)</span>' in html
+    # El tubo completo se protege de la luz
+    assert "Proteger de la luz</span>" in html
+    assert "Ayuno: revise lo que indica el listado" not in html
+    assert "<strong>Luz:</strong>" not in html
+
+
+def test_frase_con_ayuno_y_luz_se_muestra_una_vez(ruta_base, cliente_con_examenes):
+    cargar_examen(ruta_base, "VITAMINA PRUEBA", "amarillo", instrucciones="Ayuno de 4 horas y proteger de la luz.")
+    agregar(cliente_con_examenes, "vitamina prueba")
+    html = cliente_con_examenes.get("/tubos").get_data(as_text=True)
+    assert html.count("Ayuno de 4 horas y proteger de la luz") == 1
+
+
+def test_examen_sin_tubo_va_en_su_tarjeta_despues_de_los_tubos(cliente_con_examenes):
+    agregar(cliente_con_examenes, "hemograma")
+    agregar(cliente_con_examenes, "examen sin laboratorio")
+    html = cliente_con_examenes.get("/tubos").get_data(as_text=True)
+    tarjeta = html.index("Tubo: dato no disponible · consulte con el laboratorio")
+    assert html.index("Tubo lila (EDTA)") < tarjeta < html.index("EXAMEN SIN LABORATORIO")
+    # Ya no hay recuadros amarillos antes de los tubos
+    assert 'class="aviso"' not in html
+
+
+def test_derivado_sin_estabilidad_muestra_un_solo_aviso(ruta_base, cliente_con_examenes):
+    cargar_examen(ruta_base, "DERIVADO PRUEBA", "amarillo", laboratorio="Laboratorio Externo Prueba",
+                  dias_proceso="LU A DO")
+    agregar(cliente_con_examenes, "derivado prueba")
+    html = cliente_con_examenes.get("/tubos").get_data(as_text=True)
+    assert "<strong>Estabilidad según el listado:</strong>\n              dato no disponible. Consultar con el laboratorio" in html
+    assert "<strong>Estabilidad: dato no disponible</strong>" not in html
+
+
+def test_estabilidad_que_no_sirve_para_decidir_mantiene_el_aviso(ruta_base, cliente_con_examenes):
+    cargar_examen(ruta_base, "CONGELADO PRUEBA", "amarillo", laboratorio="Laboratorio Externo Prueba",
+                  dias_proceso="LU A DO", estabilidad="Congelado 1 mes")
+    agregar(cliente_con_examenes, "congelado prueba")
+    html = cliente_con_examenes.get("/tubos").get_data(as_text=True)
+    # El listado trae estabilidad, pero solo congelada: la app advierte que no pudo revisarla
+    assert "<strong>Estabilidad: dato no disponible</strong>" in html
+    assert "Congelado 1 mes" in html
 
 
 # ---------- Sin punto final ----------

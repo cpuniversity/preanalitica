@@ -7,8 +7,8 @@ Resultado de las pruebas descritas en el [plan de pruebas](plan_de_pruebas.md).
 | | |
 |---|---|
 | Fecha | 2 de noviembre de 2026 |
-| Pruebas automáticas | **245** |
-| Pasan | **245 (100 %)** |
+| Pruebas automáticas | **250** |
+| Pasan | **250 (100 %)** |
 | Fallan | 0 |
 | Duración | 5 a 7 segundos |
 | Integración continua | GitHub Actions corre las pruebas en cada `push` (ver sección 3) |
@@ -22,11 +22,11 @@ Resultado de las pruebas descritas en el [plan de pruebas](plan_de_pruebas.md).
 | `test_tubos.py` | Lectura del tubo desde el texto del listado (RF-3) | 39 | ✔ Pasan todas |
 | `test_agrupador.py` | Agrupación, orden CLSI y excepciones (RF-3) | 22 | ✔ Pasan todas |
 | `test_derivaciones.py` | Día de proceso y estabilidad (RF-4) | 57 | ✔ Pasan todas |
-| `test_interfaz.py` | Pantallas, textos y resumen (RF-5) | 12 | ✔ Pasan todas |
+| `test_interfaz.py` | Pantallas, textos y resumen (RF-5) | 17 | ✔ Pasan todas |
 | `test_auditoria.py` | Registro y envío semanal (RF-6) | 21 | ✔ Pasan todas |
 | `test_importador.py` | Importación y reportes de revisión (RF-7) | 29 | ✔ Pasan todas |
 | `test_clases.py` | Clases del dominio y patrones de diseño | 10 | ✔ Pasan todas |
-| **Total** | | **245** | **✔ 245 de 245** |
+| **Total** | | **250** | **✔ 250 de 250** |
 
 Algunas pruebas revisan varios casos parecidos de una vez (por ejemplo, varios
 nombres válidos en `test_ingreso.py`); `pytest` cuenta cada caso por separado.
@@ -38,6 +38,7 @@ nombres válidos en `test_ingreso.py`); `pytest` cuenta cada caso por separado.
 | Computador del equipo | Windows 11 | 3.13.2 | ✔ 245 pasan |
 | Copia limpia del repositorio, sin `data/` ni `.env` (como la ve GitHub) | Windows 11 | 3.13.2 | ✔ 245 pasan, sin dejar archivos |
 | GitHub Actions, primera ejecución ([ver en GitHub](https://github.com/cpuniversity/preanalitica/actions/runs/41552922051)), commit `00e7df1` | Ubuntu (Linux) | 3.13 | ✔ 245 pasan, en 17 segundos en total |
+| Computador del equipo, después de ordenar la pantalla de tubos (5 pruebas nuevas) | Windows 11 | 3.13.2 | ✔ 250 pasan |
 
 Desde entonces, cada `push` queda con su propia ejecución en la pestaña
 [Actions](https://github.com/cpuniversity/preanalitica/actions/workflows/pruebas.yml)

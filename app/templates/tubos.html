@@ -21,16 +21,20 @@
   <a class="etiqueta etiqueta-{{ tipo }}" href="#derivado-{{ d.examen.id }}">{{ texto }} · ver detalle</a>
 {% endmacro %}
 
-{# Lista de exámenes de un tubo, con sus advertencias tal como las escribe el listado #}
+{# Ayuno y luz al lado del nombre del examen, destacados, con la frase tal como la escribe el listado.
+   Si una misma frase habla de ayuno y de luz, se muestra una sola vez #}
+{% macro avisos_examen(examen) -%}
+  {%- set frases = examen.ayuno + (examen.luz|reject("in", examen.ayuno)|list) -%}
+  {%- if frases %}<span class="aviso-examen">({{ frases|map("sin_punto")|join(". ") }})</span>{% endif -%}
+{%- endmacro %}
+
+{# Lista de exámenes de un tubo, con sus advertencias #}
 {% macro lista_examenes(examenes) %}
   <ul class="tubo-examenes">
     {% for examen in examenes %}
       <li>
-        {{ examen.nombre }}
+        {{ examen.nombre }} {{ avisos_examen(examen) }}
         {% if examen.id in veredictos %}{{ etiqueta_estabilidad(veredictos[examen.id]) }}{% endif %}
-        {% for frase in examen.luz %}
-          <div class="frase-listado"><strong>Luz:</strong> {{ frase|sin_punto }}</div>
-        {% endfor %}
       </li>
     {% endfor %}
   </ul>
@@ -73,31 +77,6 @@
     </div>
   {% endif %}
 
-  {% if resumen.examenes_con_ayuno %}
-    <div class="aviso">
-      <strong>Ayuno: revise lo que indica el listado</strong>
-      <ul class="lista-avisos">
-        {% for examen in resumen.examenes_con_ayuno %}
-          <li><strong>{{ examen.nombre }}:</strong>
-            {{ examen.ayuno|map("sin_punto")|join(". ") }}
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
-  {% endif %}
-
-  {% if resumen.sin_tubo %}
-    <div class="aviso">
-      <strong>Tubo: dato no disponible</strong>. Consulte con el laboratorio antes de tomar la muestra
-      <ul class="lista-avisos">
-        {% for examen in resumen.sin_tubo %}
-          <li>{{ examen.nombre }} {{ etiqueta(examen.etiqueta) }}
-            {% if examen.id in veredictos %}{{ etiqueta_estabilidad(veredictos[examen.id]) }}{% endif %}</li>
-        {% endfor %}
-      </ul>
-    </div>
-  {% endif %}
-
   {% if resumen.tubos %}
     <ol class="tubos">
       {% for tubo in resumen.tubos %}
@@ -125,6 +104,22 @@
         </li>
       {% endfor %}
     </ol>
+  {% endif %}
+
+  {# Exámenes cuyo tubo la app no reconoce: una tarjeta por examen, porque no se sabe si comparten tubo #}
+  {% if resumen.sin_tubo %}
+    <ul class="tubos">
+      {% for examen in resumen.sin_tubo %}
+        <li class="tubo">
+          <span class="tubo-numero tubo-numero-otra" aria-hidden="true">?</span>
+          <div class="tubo-detalle">
+            <div class="tubo-nombre">Tubo: dato no disponible · consulte con el laboratorio</div>
+            <div class="tubo-etiquetas">{{ etiqueta(examen.etiqueta) }}</div>
+            {{ lista_examenes([examen]) }}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
   {% endif %}
 
   {% if resumen.punciones_aparte %}
@@ -155,16 +150,13 @@
         <li class="tubo">
           <span class="tubo-numero tubo-numero-otra" aria-hidden="true">•</span>
           <div class="tubo-detalle">
-            <div class="tubo-nombre">{{ examen.nombre }}</div>
+            <div class="tubo-nombre">{{ examen.nombre }} {{ avisos_examen(examen) }}</div>
             <div class="tubo-etiquetas">
               {{ etiqueta(examen.etiqueta) }}
               {% if examen.id in veredictos %}{{ etiqueta_estabilidad(veredictos[examen.id]) }}{% endif %}
             </div>
             <div class="frase-listado"><strong>Muestra según el listado:</strong>
               {{ examen.muestra|sin_punto if examen.muestra else "dato no disponible" }}</div>
-            {% for frase in examen.luz %}
-              <div class="frase-listado"><strong>Luz:</strong> {{ frase|sin_punto }}</div>
-            {% endfor %}
           </div>
         </li>
       {% endfor %}
@@ -221,13 +213,15 @@
             {% elif d.resultado == "sin_dia" %}
               <p class="veredicto veredicto-aviso"><strong>Día de proceso: dato no disponible</strong>.
                 Consultar con el laboratorio</p>
-            {% else %}
+            {% elif d.estabilidad_texto %}
+              {# El listado trae estabilidad, pero no sirve para decidir (por ejemplo, solo congelada) #}
               <p class="veredicto veredicto-aviso"><strong>Estabilidad: dato no disponible</strong>.
                 Consultar con el laboratorio</p>
             {% endif %}
 
+            {# Si el listado no trae estabilidad, esta línea es el aviso: no se repite arriba #}
             <div class="frase-listado"><strong>Estabilidad según el listado:</strong>
-              {{ d.estabilidad_texto|sin_punto or "dato no disponible" }}</div>
+              {{ d.estabilidad_texto|sin_punto or "dato no disponible. Consultar con el laboratorio" }}</div>
           </div>
         </li>
       {% endfor %}

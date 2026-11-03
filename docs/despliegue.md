@@ -16,7 +16,7 @@ médico y el área de informática del hospital.
 | Ambiente | Para qué | Dónde | Datos | Correo de auditoría |
 |---|---|---|---|---|
 | **Desarrollo** | Programar y probar cada cambio | Computador del equipo, `flask --app app run --debug` | Listado real en `data/` (fuera de Git) | Modo prueba: se guarda como `.eml` en `data/` |
-| **Integración continua** | Correr las 245 pruebas en cada `push` | GitHub Actions (Linux) | Solo exámenes inventados | Nunca se envía |
+| **Integración continua** | Correr todas las pruebas en cada `push` | GitHub Actions (Linux) | Solo exámenes inventados | Nunca se envía |
 | **Validación** | Que el tecnólogo médico revise casos reales antes de cada versión (HU-20) | Un computador del laboratorio, con la misma versión que irá a producción | Listado real vigente | Modo prueba |
 | **Producción** (propuesta) | Uso diario de enfermería | Servidor de la red interna del hospital **[por definir]** | Listado real validado | Modo real, con el servidor de correo del hospital |
 

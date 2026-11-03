@@ -77,9 +77,9 @@ cuando el tecnólogo médico valide la app con casos reales (HU-20).
 | RF-3.5 | Los tubos se numeran en el orden CLSI: hemocultivo, celeste, amarillo con gel, rojo, verde, jeringa de gases venosos, lila, gris; con el mismo tubo, primero el del recinto | Must | P: `test_orden_de_extraccion_clsi`, `test_mismo_tubo_primero_el_recinto` |
 | RF-3.6 | Hemocultivo y gases venosos van en su propio contenedor; los gases arteriales son una punción aparte, fuera del orden | Must | P: `test_hemocultivo_nunca_se_comparte`, `test_gases_venosos_nunca_se_comparten`, `test_gases_arteriales_son_puncion_aparte_fuera_del_orden`; `test_tubos.py`: `test_gases_arteriales_y_venosos_se_distinguen_por_el_nombre` |
 | RF-3.7 | Las muestras que no son sangre van en "Otras muestras", fuera del orden y sin contar como tubo | Should | P: `test_otras_muestras_van_aparte_y_no_cuentan_como_tubo`; `test_tubos.py`: `test_muestras_que_no_son_sangre` |
-| RF-3.8 | Ayuno se advierte con la frase original del listado; protección de la luz es una advertencia sobre el tubo; hielo no se muestra | Should | P: `test_ayuno_es_advertencia_con_la_frase_del_listado`, `test_proteccion_de_la_luz_es_advertencia_sobre_el_tubo_completo`, `test_hielo_no_se_muestra_a_enfermeria`; `test_tubos.py`: `test_frases_se_copian_tal_cual` |
+| RF-3.8 | Ayuno se advierte con la frase original del listado; protección de la luz es una advertencia sobre el tubo; hielo no se muestra. En la pantalla, el ayuno y la luz van al lado del nombre del examen, destacados y entre paréntesis | Should | P: `test_ayuno_es_advertencia_con_la_frase_del_listado`, `test_proteccion_de_la_luz_es_advertencia_sobre_el_tubo_completo`, `test_hielo_no_se_muestra_a_enfermeria`; `test_tubos.py`: `test_frases_se_copian_tal_cual`; `test_interfaz.py`: `test_ayuno_y_luz_van_al_lado_del_examen_y_no_en_un_recuadro_arriba`, `test_frase_con_ayuno_y_luz_se_muestra_una_vez` |
 | RF-3.9 | Si el texto trae indicación para adultos y pediátricos, se usa la de adultos | Must | P: `test_tubos.py`: `test_solo_se_considera_la_parte_de_adultos` |
-| RF-3.10 | Si la app no reconoce el tubo, muestra "Tubo: dato no disponible" y lo avisa; nunca lo adivina | Must | P: `test_tubo_no_disponible_se_avisa_y_no_se_adivina`; `test_tubos.py`: `test_si_no_es_claro_no_adivina`, `test_muestra_vacia_es_dato_no_disponible` |
+| RF-3.10 | Si la app no reconoce el tubo, muestra "Tubo: dato no disponible · consulte con el laboratorio" en una tarjeta propia por examen, después de los tubos numerados; nunca lo adivina | Must | P: `test_tubo_no_disponible_se_avisa_y_no_se_adivina`; `test_tubos.py`: `test_si_no_es_claro_no_adivina`, `test_muestra_vacia_es_dato_no_disponible`; `test_interfaz.py`: `test_examen_sin_tubo_va_en_su_tarjeta_despues_de_los_tubos` |
 
 ### RF-4 Derivaciones y estabilidad · Archivo: `test_derivaciones.py`
 
@@ -90,7 +90,7 @@ cuando el tecnólogo médico valide la app con casos reales (HU-20).
 | RF-4.3 | La estabilidad se decide con la refrigerada o, si no existe, con la ambiente (la congelada solo se informa), y con el tipo de muestra del tubo del examen | Must | P: `test_sin_refrigerada_se_usa_la_ambiente`, `test_solo_congelada_no_se_usa_para_decidir`, `test_se_usa_la_estabilidad_del_tipo_de_muestra_del_tubo`, `test_lila_sangre_total_y_plasma_son_lo_mismo_se_usa_la_mas_corta`, `test_tipo_de_muestra_que_no_corresponde_al_tubo_no_se_adivina` |
 | RF-4.4 | El veredicto es "la estabilidad lo permite", "al límite, consultar" o "NO alcanza" | Must | P: `test_comparar`, `test_jueves_solo_lunes_estabilidad_7_dias_alcanza`, `test_viernes_antes_y_despues_de_las_15` |
 | RF-4.5 | Si no alcanza, se advierte de forma destacada y se sugieren días de toma de la próxima semana | Should | P: `test_jueves_solo_lunes_estabilidad_2_dias_no_alcanza_y_sugiere_domingo`, `test_no_alcanza_ningun_dia_de_la_semana` |
-| RF-4.6 | Si el listado no trae estabilidad, se muestra "dato no disponible" | Must | P: `test_sin_estabilidad_es_dato_no_disponible`, `test_sin_estabilidad_queda_vacia` |
+| RF-4.6 | Si el listado no trae estabilidad, se muestra una sola vez "Estabilidad según el listado: dato no disponible. Consultar con el laboratorio". Si la trae pero no sirve para decidir (por ejemplo, solo congelada), se advierte además que no se pudo revisar | Must | P: `test_sin_estabilidad_es_dato_no_disponible`, `test_sin_estabilidad_queda_vacia`; `test_interfaz.py`: `test_derivado_sin_estabilidad_muestra_un_solo_aviso`, `test_estabilidad_que_no_sirve_para_decidir_mantiene_el_aviso` |
 | RF-4.7 | "Según demanda" no tiene veredicto: se muestra el tiempo de respuesta y se pide consultar con el laboratorio | Must | P: `test_segun_demanda`, `test_segun_demanda_no_da_veredicto_y_muestra_tiempo_de_respuesta` |
 | RF-4.8 | Solo se revisan los exámenes que se derivan | Must | P: `test_solo_se_revisan_los_que_se_derivan`; `test_interfaz.py`: `test_examen_del_recinto_no_lleva_etiqueta_de_estabilidad` |
 
@@ -186,7 +186,7 @@ Todas las decisiones están detalladas en `CLAUDE.md`. Resumen:
 
 ## 8. Estado actual
 
-Las seis etapas de la versión 1 están implementadas y con pruebas automáticas (245 pruebas, todas pasan). La lógica está organizada en clases del dominio; ver `docs/arquitectura.md` y los diagramas UML en `docs/uml/`:
+Las seis etapas de la versión 1 están implementadas y con pruebas automáticas (250 pruebas, todas pasan). La lógica está organizada en clases del dominio; ver `docs/arquitectura.md` y los diagramas UML en `docs/uml/`:
 
 | Etapa | Estado |
 |---|---|

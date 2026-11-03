@@ -150,7 +150,7 @@ Hay una maqueta de tres pantallas (Ingreso, Búsqueda de exámenes, Resumen de t
 - Cabecera con el nombre "Preanalítica", los tres pasos (Identificación, Exámenes, Tubos) y, desde el paso 2, el nombre de la enfermera con la opción "Cambiar".
 - Pantalla 1: nombre y apellido, botón "Continuar" y aviso de que no se ingresan datos del paciente.
 - Pantalla 2: buscador grande con sugerencias (cada una con si se procesa en el recinto o se deriva) y, al lado, la lista de exámenes seleccionados con botón para quitar cada uno y el botón "Ver qué tubos usar" siempre visible.
-- Pantalla 3: tubos numerados en orden de extracción, con su laboratorio y sus exámenes, el total de tubos, los avisos (ayuno, tubo no disponible, estabilidad que no alcanza), las otras muestras, los exámenes que se derivan con su revisión de estabilidad, y al final los botones "Volver a exámenes", "Imprimir resumen" y "Nueva consulta".
+- Pantalla 3: tubos numerados en orden de extracción, con su laboratorio y sus exámenes, y el total de tubos. Arriba solo va la alerta roja cuando una estabilidad no alcanza; no hay recuadros amarillos. El ayuno y la luz van al lado del nombre de cada examen, destacados en amarillo y entre paréntesis, con la frase del listado (ej.: "PROTEÍNAS SANGRE (8 HRS AYUNO)"). Los exámenes con "Tubo: dato no disponible" van en su propia tarjeta después de los tubos numerados. Luego las otras muestras, los exámenes que se derivan con su revisión de estabilidad, y al final los botones "Volver a exámenes", "Imprimir resumen" y "Nueva consulta".
 - Solo escritorio: no hace falta diseño para celular en la versión 1.
 
 ## Cómo trabajar
