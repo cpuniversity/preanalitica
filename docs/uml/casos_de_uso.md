@@ -8,7 +8,7 @@ del sistema, y las flechas punteadas son relaciones `include` o `extend`.
 
 ```mermaid
 flowchart LR
-    enfermera((Enfermera<br>o matrona))
+    enfermera((Enfermera))
     tecnologo((Tecnólogo<br>médico))
     jefatura((Jefatura de<br>laboratorio y sección))
     reloj((Reloj<br>del sistema))
@@ -59,7 +59,7 @@ flowchart LR
 
 ### CU-02 Buscar y seleccionar exámenes
 
-- **Actor:** enfermera o matrona.
+- **Actor:** enfermera.
 - **Requisito:** RF-2.
 - **Precondición:** la enfermera se identificó (CU-01) y hay un listado cargado.
 - **Flujo principal:**
@@ -78,7 +78,7 @@ flowchart LR
 
 ### CU-03 Ver tubos y orden de extracción
 
-- **Actor:** enfermera o matrona.
+- **Actor:** enfermera.
 - **Requisitos:** RF-3, RF-5.
 - **Precondición:** hay al menos un examen seleccionado.
 - **Flujo principal:**

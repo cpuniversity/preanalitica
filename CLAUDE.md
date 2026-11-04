@@ -1,12 +1,12 @@
 # Preanalítica
 
-Aplicación web para personal de enfermería y matronería. A partir de los exámenes indicados por el médico en la ficha clínica, muestra qué tubos usar, cuáles exámenes se procesan en el laboratorio del recinto y cuáles se derivan. Es un prototipo local para un curso (Ingeniería de Software, UDP), pero se construye con criterios profesionales.
+Aplicación web para personal de enfermería. A partir de los exámenes indicados por el médico en la ficha clínica, muestra qué tubos usar, cuáles exámenes se procesan en el laboratorio del recinto y cuáles se derivan. Es un prototipo local para un curso (Ingeniería de Software, UDP), pero se construye con criterios profesionales.
 
 Los requisitos completos y el estado del proyecto están en `docs/requisitos.md`.
 
 ## Quién usa esto
 
-- Usuaria final: enfermera o matrona, muchas veces en turno de noche, con poco tiempo. La interfaz debe ser clara, ordenada y amigable.
+- Usuaria final: enfermera, muchas veces en turno de noche, con poco tiempo. La interfaz debe ser clara, ordenada y amigable.
 - Dueño del dominio: tecnólogo médico. Las reglas clínicas las define él, no tú. En todo documento o material del proyecto se nombra solo como "tecnólogo médico", sin especialidad.
 
 ## Alcance de la versión 1
@@ -20,13 +20,14 @@ Dentro:
 - Resumen final: total de tubos, orden de extracción según CLSI y qué exámenes se derivan.
 - Derivaciones: para cada examen derivado, mostrar si la estabilidad de la muestra alcanza hasta el día en que lo procesa el laboratorio externo; si no alcanza, advertir claramente y sugerir cuándo tomarla (ver "Derivaciones y estabilidad").
 - Auditoría (ver más abajo).
-- Solo adultos. Solo uso desde computador.
+- Solo enfermería y solo pacientes adultos. Solo uso desde computador.
 
 Fuera de la versión 1 (no implementar, no anticipar con código a medias):
 - Cálculo de volúmenes por tubo.
 - Todo lo que sea compartir o fraccionar volumen de una muestra entre exámenes.
 - Sección del laboratorio: el listado no la trae; no implementar reglas que dependan de ella.
 - Día de envío de las muestras: es tarea del laboratorio, no de enfermería.
+- Matronería: queda fuera porque la versión 1 solo considera pacientes adultos.
 - Pacientes pediátricos, uso en celular, integración con la ficha clínica.
 
 Si algo no está en este documento, pregunta antes de implementarlo.

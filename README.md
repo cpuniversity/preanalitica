@@ -2,7 +2,7 @@
 
 [![Pruebas](https://github.com/cpuniversity/preanalitica/actions/workflows/pruebas.yml/badge.svg)](https://github.com/cpuniversity/preanalitica/actions/workflows/pruebas.yml)
 
-Aplicación web para personal de enfermería y matronería. A partir de los
+Aplicación web para personal de enfermería. A partir de los
 exámenes indicados por el médico, muestra qué tubos usar y en qué orden
 extraerlos, cuáles exámenes se procesan en el laboratorio del recinto y cuáles
 se derivan, y si la estabilidad de cada muestra derivada alcanza.

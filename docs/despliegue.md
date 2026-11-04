@@ -193,7 +193,7 @@ laboratorio.
 actual (consultar el listado técnico o llamar al laboratorio). La app nunca
 debe ser la única forma de saber qué tubo usar.
 
-**Comentarios.** Durante la puesta en marcha, las enfermeras y matronas
+**Comentarios.** Durante la puesta en marcha, las enfermeras
 pueden informar resultados que les parezcan incorrectos. El tecnólogo médico
 los revisa y, si corresponde, se corrige con una prueba nueva.
 

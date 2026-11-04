@@ -4,7 +4,7 @@ Prototipo para el curso Ingeniería de Software (UDP). Noviembre 2026.
 
 ## 1. Propósito
 
-Ayudar al personal de enfermería y matronería a preparar la toma de muestras. A partir de los exámenes que indica el médico, la aplicación muestra:
+Ayudar al personal de enfermería a preparar la toma de muestras. A partir de los exámenes que indica el médico, la aplicación muestra:
 
 - qué tubos usar y en qué orden extraerlos,
 - qué exámenes se procesan en el laboratorio del recinto y cuáles se derivan,
@@ -14,7 +14,7 @@ Ayudar al personal de enfermería y matronería a preparar la toma de muestras. 
 
 | Usuario | Rol |
 |---|---|
-| Enfermera o matrona | Usa la aplicación, muchas veces en turno de noche y con poco tiempo |
+| Enfermera | Usa la aplicación, muchas veces en turno de noche y con poco tiempo |
 | Tecnólogo médico | Dueño del dominio: define y valida las reglas clínicas |
 | Jefatura de laboratorio y de sección | Recibe la auditoría semanal por correo |
 
@@ -161,6 +161,7 @@ comprobar.
 - Cálculo de volúmenes y fraccionamiento de muestras.
 - Reglas por sección del laboratorio (el listado no trae sección).
 - Día de envío de las muestras (es tarea del laboratorio).
+- Matronería: la versión 1 es solo para enfermería, porque solo considera pacientes adultos.
 - Pacientes pediátricos, uso en celular, integración con la ficha clínica.
 - Inicio de sesión con contraseña e instalación en un servidor de producción.
 

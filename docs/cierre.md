@@ -6,7 +6,7 @@
 
 ## 1. Síntesis
 
-**El problema.** Para tomar una muestra, la enfermera o matrona debe traducir
+**El problema.** Para tomar una muestra, la enfermera debe traducir
 la indicación médica en tubos, orden de extracción y exámenes que se derivan.
 La información está en el listado técnico del laboratorio (documento INSVE
 02000): un listado largo, en texto libre y sin cálculo de estabilidad. Un error
