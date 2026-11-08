@@ -23,7 +23,7 @@ las clases que lo implementan y las pruebas que lo verifican.
 | RF-4 Derivaciones y estabilidad | CU-04 | SD-1 | `RevisorDeEstabilidad.revisar()`, `CalendarioDeProceso.dia_de_proceso()`, `Estabilidad.para_decidir()` | `test_derivaciones.py` (57) |
 | RF-5 Resumen e impresión | CU-03, CU-05 | SD-1 | `rutas.tubos()`, plantilla `tubos.html` | `test_interfaz.py` (19) |
 | RF-6 Auditoría | CU-08, CU-09 | SD-1, SD-4 | `Auditoria.registrar()`, `Auditoria.envio_semanal()`, `EnviadorDeCorreo.enviar()` | `test_auditoria.py` (21) |
-| RF-7 Importación del listado | CU-06, CU-07 | SD-3 | `Importador.importar()`, `LectorDeListadoCSV.leer()` | `test_importador.py` (29) |
+| RF-7 Importación del listado | CU-06, CU-07 | SD-3 | `Importador.importar()`, `LectorDeListadoCSV.leer()` | `test_importador.py` (30) |
 | Diseño (patrones y SOLID) | — | — | `RepositorioDeExamenes`, `EnviadorDeCorreo`, `LectorDeListado` | `test_clases.py` (10) |
 
-Total: 257 pruebas automáticas (`pytest`).
+Total: 258 pruebas automáticas (`pytest`).

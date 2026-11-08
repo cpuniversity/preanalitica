@@ -203,6 +203,25 @@ def test_lab_derivado_no_numerico_se_excluye_y_se_avisa(ruta, codigo):
     assert observaciones == [(4, "EXAMEN PRUEBA UNO", f'Lab. Derivado dice "{codigo}": excluido, no se cargó')]
 
 
+def test_leyenda_de_laboratorios_no_se_carga_como_examen(ruta):
+    # Al final del listado viene la leyenda: un número y el nombre del laboratorio
+    escribir_listado(ruta, [
+        examen("EXAMEN PRUEBA UNO"),
+        examen("1,25 HIDROXI VITAMINA D", laboratorio="Laboratorio Externo Prueba", codigo_derivado="3"),
+        examen("DERIVACION    1", laboratorio="", muestra="Laboratorio Externo Uno", codigo_derivado="12",
+               codigo_vidalab="", codigo_medisyn="", dias=""),
+        examen("2", laboratorio="", muestra="Laboratorio Externo Dos", codigo_derivado="16",
+               codigo_vidalab="", codigo_medisyn="", dias=""),
+    ])
+    examenes, observaciones = LectorDeListadoCSV().leer(ruta)
+    # Un examen real que empieza con número sí se carga
+    assert [e["nombre"] for e in examenes] == ["EXAMEN PRUEBA UNO", "1,25 HIDROXI VITAMINA D"]
+    assert observaciones == [
+        (6, "DERIVACION    1", "Fila de la leyenda de laboratorios: no es un examen, no se cargó"),
+        (7, "2", "Fila de la leyenda de laboratorios: no es un examen, no se cargó"),
+    ]
+
+
 def test_dos_codigos_en_una_celda_se_guarda_el_mayor(ruta):
     escribir_listado(ruta, [examen("EXAMEN PRUEBA UNO",
                                    codigo_vidalab="0302048-00 \n030204801",

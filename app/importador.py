@@ -6,6 +6,7 @@ eso lo hacen otros módulos, con reglas validadas por el tecnólogo médico.
 """
 
 import csv
+import re
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
@@ -93,6 +94,17 @@ def elegir_codigo_mayor(texto):
     return max(codigos, key=lambda codigo: int("".join(c for c in codigo if c.isdigit()) or 0))
 
 
+def es_fila_de_leyenda(registro):
+    """¿Es una fila de la leyenda de laboratorios que trae el listado al final?
+
+    La leyenda dice qué laboratorio corresponde a cada número ("DERIVACION 1",
+    "2", "3"...). Esas filas no tienen laboratorio y su "nombre" es solo un número,
+    así que no son exámenes.
+    """
+    nombre = normalizar(registro["nombre"])
+    return not registro["laboratorio"] and bool(re.fullmatch(r"(derivacion\s*)?\d+", nombre))
+
+
 class LectorDeListado(ABC):
     """Cualquier forma de leer el listado técnico (CSV hoy; Excel o PDF a futuro).
 
@@ -137,6 +149,10 @@ class LectorDeListadoCSV(LectorDeListado):
                 continue
             if not registro["nombre"]:
                 observaciones.append((numero, "", "Fila con datos pero sin nombre de examen: no se cargó"))
+                continue
+            if es_fila_de_leyenda(registro):
+                observaciones.append((numero, registro["nombre"],
+                                      "Fila de la leyenda de laboratorios: no es un examen, no se cargó"))
                 continue
             # Indicación del tecnólogo médico: si "Lab. Derivado" no es un número
             # (por ejemplo "-" o "NOTA:"), el examen no se considera en la app

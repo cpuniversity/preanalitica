@@ -128,6 +128,7 @@ cuando el tecnólogo médico valide la app con casos reales (HU-20).
 | RF-7.5 | Genera `data/reporte_revision.csv` con campos vacíos, valores raros y duplicados para el tecnólogo médico | Must | P: `test_importar_guarda_en_la_base_y_escribe_reporte`, `test_examen_sin_tubo_se_avisa`, `test_examen_sin_laboratorio_se_avisa`, `test_examen_derivado_sin_dia_ni_estabilidad_se_avisa`, `test_nombre_repetido_se_avisa`, `test_dia_de_proceso_que_no_se_entiende_se_avisa` |
 | RF-7.6 | Genera `data/tubos_por_revisar.csv` con los tubos que no reconoce; lo que completa el tecnólogo médico se usa y se conserva en la siguiente importación | Should | P: `test_tubo_ambiguo_va_a_la_tabla_y_queda_no_disponible`, `test_lo_que_completa_el_tecnologo_se_usa_y_se_conserva`, `test_valor_no_reconocido_en_la_tabla_se_avisa`, `test_tecnologo_puede_marcar_otra_muestra` |
 | RF-7.7 | Importar de nuevo reemplaza los exámenes anteriores | Must | P: `test_importar_dos_veces_reemplaza_los_examenes` |
+| RF-7.8 | Las filas de la leyenda de laboratorios del final del listado (nombre que es solo un número y sin laboratorio) no se cargan como exámenes y quedan anotadas en el reporte de revisión | Must | P: `test_leyenda_de_laboratorios_no_se_carga_como_examen` |
 
 ## 4. Reglas clínicas no negociables
 
@@ -187,7 +188,7 @@ Todas las decisiones están detalladas en `CLAUDE.md`. Resumen:
 
 ## 8. Estado actual
 
-Las seis etapas de la versión 1 están implementadas y con pruebas automáticas (257 pruebas, todas pasan). La lógica está organizada en clases del dominio; ver `docs/arquitectura.md` y los diagramas UML en `docs/uml/`:
+Las seis etapas de la versión 1 están implementadas y con pruebas automáticas (258 pruebas, todas pasan). La lógica está organizada en clases del dominio; ver `docs/arquitectura.md` y los diagramas UML en `docs/uml/`:
 
 | Etapa | Estado |
 |---|---|
@@ -200,12 +201,12 @@ Las seis etapas de la versión 1 están implementadas y con pruebas automáticas
 
 GitHub Actions corre las pruebas en cada `push` (`.github/workflows/pruebas.yml`). El plan de pruebas y el informe de resultados están en `docs/plan_de_pruebas.md` y `docs/informe_de_pruebas.md`.
 
-Datos del listado actual: 620 exámenes (173 se procesan en el recinto y 447 se derivan).
+Datos del listado actual: 615 exámenes (173 se procesan en el recinto y 442 se derivan).
 
 ## 9. Pendientes
 
 Con el tecnólogo médico:
-- Completar los 46 exámenes de `data/tubos_por_revisar.csv` (guía en `docs/tabla_de_tubos.md`). Mientras tanto aparecen como "Tubo: dato no disponible".
+- Completar los 41 exámenes de `data/tubos_por_revisar.csv` (guía en `docs/tabla_de_tubos.md`). Mientras tanto aparecen como "Tubo: dato no disponible".
 - Revisar el reporte de revisión, en especial los derivados sin estabilidad en el listado.
 - Probar la aplicación con casos reales y validar los resultados de agrupación, orden y estabilidad.
 - Decidir si se quiere una lista de exámenes frecuentes que aparezcan primero en el buscador.
