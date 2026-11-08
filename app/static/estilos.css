@@ -14,6 +14,10 @@
 
 * { box-sizing: border-box; }
 
+/* Siempre se reserva el espacio de la barra de desplazamiento,
+   para que el contenido no se corra al pasar de una pantalla con barra a otra sin ella */
+html { scrollbar-gutter: stable; }
+
 body {
   margin: 0;
   background: var(--fondo);
@@ -33,12 +37,23 @@ h1 { font-size: 28px; font-weight: 600; margin: 0 0 4px; }
 .cabecera-contenido {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 16px 32px;
+  padding: 12px 32px;
+  /* Misma altura en todas las pantallas, aparezca o no el botón "Cambiar" (44 px + márgenes):
+     así los pasos no se mueven al pasar de Identificación a Exámenes */
+  min-height: 68px;
   display: flex;
   align-items: center;
   gap: 40px;
 }
-.marca { font-size: 22px; font-weight: 700; color: var(--acento); }
+.marca { font-size: 22px; font-weight: 700; color: var(--acento); display: flex; align-items: center; gap: 10px; }
+.marca-icono { width: 32px; height: 32px; display: block; }
+/* Franja decorativa con los colores de las tapas, en orden de extracción (CLSI) */
+.franja-tapas {
+  height: 5px;
+  background: linear-gradient(to right,
+    #7FC8E8 0 16.66%, #F2C230 16.66% 33.33%, #C8322B 33.33% 50%,
+    #2E8B57 50% 66.66%, #A77BCA 66.66% 83.33%, #9AA3AA 83.33% 100%);
+}
 
 .pasos {
   list-style: none;
@@ -66,6 +81,15 @@ h1 { font-size: 28px; font-weight: 600; margin: 0 0 4px; }
   font-weight: 600;
 }
 .paso-activo { color: var(--texto); font-weight: 600; }
+/* Cada paso reserva el ancho que tendría en negrita: así no se corren al cambiar de pantalla */
+.paso-titulo { display: inline-flex; flex-direction: column; }
+.paso-titulo::after {
+  content: attr(data-texto) / "";  /* el "" evita que un lector de pantalla lo lea dos veces */
+  font-weight: 600;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
 .paso-activo .paso-numero { background: var(--acento); border-color: var(--acento); color: #FFFFFF; }
 .paso-hecho .paso-numero { border-color: var(--acento); color: var(--acento); }
 
@@ -89,7 +113,45 @@ h1 { font-size: 28px; font-weight: 600; margin: 0 0 4px; }
   border-radius: 16px;
   padding: 32px;
 }
-.tarjeta-ingreso { max-width: 520px; margin: 0 auto; }
+/* Ingreso: bienvenida a la izquierda y formulario a la derecha */
+.tarjeta-ingreso {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.bienvenida {
+  background: var(--acento);
+  color: #FFFFFF;
+  padding: 28px 36px;
+  display: flex;
+  flex-direction: column;
+}
+.bienvenida-marca { display: flex; align-items: center; gap: 12px; font-size: 22px; font-weight: 700; }
+.bienvenida-icono { width: 40px; height: 40px; flex: none; }
+.bienvenida-frase { font-size: 24px; font-weight: 600; line-height: 1.3; margin: 24px 0 22px; }
+.bienvenida-pasos { list-style: none; margin: 0; padding: 0; }
+.bienvenida-pasos li { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; color: #E3F1F1; }
+.bienvenida-numero {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid #FFFFFF;
+  color: #FFFFFF;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.bienvenida-tapas { margin-top: auto; height: 8px; border-radius: 4px; max-width: 240px; }
+/* Espacios más compactos para que el ingreso quepa completo en una pantalla de notebook */
+.ingreso-formulario { padding: 28px 36px; }
+.ingreso-formulario .texto-secundario { margin-bottom: 16px; }
+.ingreso-formulario .campo { margin-bottom: 12px; }
+.ingreso-formulario .aviso { margin-top: 16px; }
 .texto-secundario { color: var(--texto-secundario); margin: 0 0 24px; }
 
 /* ---------- Formularios ---------- */
@@ -105,7 +167,8 @@ h1 { font-size: 28px; font-weight: 600; margin: 0 0 4px; }
   border-radius: 10px;
   background: #FFFFFF;
 }
-.campo input:focus { outline: 3px solid var(--acento); outline-offset: 1px; border-color: var(--acento); }
+/* Campo seleccionado: un solo borde de acento con un halo suave (sin doble línea) */
+.campo input:focus { outline: none; border-color: var(--acento); box-shadow: 0 0 0 4px rgba(11, 110, 110, 0.25); }
 .campo input[aria-invalid="true"] { border-color: var(--error); }
 .error { color: var(--error); font-weight: 500; margin: 6px 0 0; }
 
@@ -183,7 +246,7 @@ h2 { font-size: 21px; font-weight: 600; margin: 0 0 16px; }
   border-radius: 12px;
   background: #FFFFFF;
 }
-.buscador input:focus { outline: 3px solid var(--acento); outline-offset: 1px; border-color: var(--acento); }
+.buscador input:focus { outline: none; border-color: var(--acento); box-shadow: 0 0 0 4px rgba(11, 110, 110, 0.25); }
 
 .sugerencias {
   list-style: none;
@@ -236,7 +299,7 @@ a.etiqueta:hover { text-decoration: underline; }
   display: flex;
   flex-direction: column;
   /* Alto de la pantalla menos la cabecera y los márgenes: cabe completo desde que carga */
-  max-height: calc(100vh - 150px);
+  max-height: calc(100vh - 162px);
 }
 .panel-seleccion .seleccionados { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin-bottom: 16px; }
 .panel-seleccion .boton-principal { flex: none; }

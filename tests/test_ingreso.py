@@ -14,6 +14,14 @@ def test_la_pagina_de_inicio_pide_nombre_y_apellido(cliente):
     assert "no se ingresan datos del paciente" in html
 
 
+def test_el_ingreso_explica_para_que_sirve_la_app(cliente):
+    html = cliente.get("/").get_data(as_text=True)
+    assert "Los tubos correctos, en el orden correcto, antes de puncionar" in html
+    for paso in ["Escriba su nombre</li>", "Busque los exámenes de la indicación</li>",
+                 "Vea qué tubos usar y qué se deriva</li>"]:
+        assert paso in html
+
+
 def test_sin_nombre_no_avanza(cliente):
     respuesta = cliente.post("/", data={"nombre": "  ", "apellido": "Soto"})
     assert respuesta.status_code == 200

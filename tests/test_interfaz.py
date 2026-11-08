@@ -43,6 +43,15 @@ def test_desde_tubos_el_paso_examenes_es_un_enlace(cliente_con_examenes):
     assert 'class="paso-enlace" href="/examenes"' in html
 
 
+def test_cabecera_con_logo_y_franja_de_tapas_en_todas_las_pantallas(cliente_con_examenes):
+    agregar(cliente_con_examenes, "hemograma")
+    for ruta in ["/", "/examenes", "/tubos"]:
+        html = cliente_con_examenes.get(ruta).get_data(as_text=True)
+        assert 'class="marca-icono"' in html
+        # La franja es solo decoración: los lectores de pantalla la ignoran
+        assert '<div class="franja-tapas" aria-hidden="true"></div>' in html
+
+
 def test_en_examenes_los_pasos_no_son_enlaces(cliente_con_examenes):
     assert "paso-enlace" not in cliente_con_examenes.get("/examenes").get_data(as_text=True)
 

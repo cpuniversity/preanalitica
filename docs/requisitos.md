@@ -52,6 +52,7 @@ cuando el tecnólogo médico valide la app con casos reales (HU-20).
 | RF-1.2 | El nombre y el apellido aceptan solo letras (con tildes, ñ y ü), espacios, guion y apóstrofo; los espacios de más se ordenan | Must | P: `test_nombre_con_numeros_o_signos_no_avanza`, `test_apellido_con_numeros_o_signos_no_avanza`, `test_nombres_reales_con_tildes_guion_o_apostrofo_avanzan`, `test_espacios_de_mas_se_ordenan` |
 | RF-1.3 | La aplicación nunca pide datos del paciente (nombre, RUT ni ficha) y la primera pantalla lo avisa | Must | P: `test_la_pagina_de_inicio_pide_nombre_y_apellido`; `test_auditoria.py`: `test_la_tabla_no_tiene_datos_del_paciente` |
 | RF-1.4 | "Cambiar" borra el nombre de la enfermera y los exámenes elegidos | Should | P: `test_cambiar_borra_el_nombre`; `test_buscador.py`: `test_cambiar_de_enfermera_borra_la_seleccion` |
+| RF-1.5 | La primera pantalla explica para qué sirve la app ("Los tubos correctos, en el orden correcto, antes de puncionar") y sus tres pasos | Should | P: `test_el_ingreso_explica_para_que_sirve_la_app` |
 
 ### RF-2 Buscador de exámenes · Archivo: `test_buscador.py`
 
@@ -147,7 +148,7 @@ comprobar.
 |---|---|---|---|---|
 | RNF-1 | Legibilidad para turnos de noche | Texto en pantalla de al menos 17 px (base de 18 px); campos de 54 a 60 px de alto; botones principales de 56 px; botones secundarios de al menos 44 px; esquinas de 10 a 16 px | Must | I: `app/static/estilos.css`. D: revisión en el navegador |
 | RNF-2 | Nunca solo el color | Cada tubo y cada etiqueta llevan su nombre en texto; la muestra de color es solo un apoyo | Must | I: plantillas `tubos.html` y `examenes.html`. D: revisión en el navegador |
-| RNF-3 | Accesibilidad | El buscador se usa con flechas, Enter y Escape; toda la app se recorre con Tab; las alertas usan `role="alert"` y el estado del buscador `aria-live` | Should | I: `buscador.js` y plantillas. D: recorrer la app solo con el teclado |
+| RNF-3 | Accesibilidad | El buscador se usa con flechas, Enter y Escape; toda la app se recorre con Tab; las alertas usan `role="alert"` y el estado del buscador `aria-live`; el campo seleccionado se marca con un solo borde de acento y un halo visible; la franja decorativa de la cabecera está oculta para lectores de pantalla | Should | I: `buscador.js` y plantillas. D: recorrer la app solo con el teclado |
 | RNF-4 | Textos sin punto final | Ningún texto que se muestra termina en punto; los puntos entre dos frases se mantienen. Excepción: en el detalle de los derivados, "Se procesaría" y "Estabilidad según el listado" terminan en punto | Should | P: `test_interfaz.py`: `test_filtro_sin_punto`, `test_textos_de_la_pantalla_de_tubos_sin_punto_final`, `test_detalle_de_derivados_termina_en_punto` |
 | RNF-5 | Interfaz en español | Las pantallas, los títulos y las páginas de error están en español | Must | P: `test_interfaz.py`: `test_cada_pantalla_tiene_su_titulo`, `test_pagina_no_encontrada_en_espanol` |
 | RNF-6 | Privacidad de pacientes | La app no pide ni guarda ningún dato de pacientes; la base no tiene columnas para ellos | Must | P: `test_auditoria.py`: `test_la_tabla_no_tiene_datos_del_paciente`. I: `app/modelos.py` |
@@ -156,6 +157,7 @@ comprobar.
 | RNF-9 | Mantenibilidad | La lógica vive en clases del dominio; las rutas no escriben SQL; el importador está separado y acepta otro formato de listado sin cambiar el resto | Should | P: `test_clases.py`: `test_el_importador_acepta_otro_lector`, `test_repositorio_entrega_examenes_en_el_orden_pedido`. I: `app/rutas.py` sin SQL; diagramas de `docs/uml/` coinciden con `app/` |
 | RNF-10 | Calidad continua | Todas las pruebas automáticas pasan en cada `push` a GitHub | Must | P: GitHub Actions (`.github/workflows/pruebas.yml`) |
 | RNF-11 | Plataforma | Corre en un computador con Python 3 y un navegador de escritorio; solo pacientes adultos | Must | D: instalación con los comandos del `README.md` |
+| RNF-12 | Navegación estable | La cabecera (logo, pasos y franja) es igual en las tres pantallas: misma altura (74 px) y misma posición de los pasos, con o sin el botón "Cambiar"; el ingreso y la búsqueda caben sin desplazamiento en una pantalla de 1366 × 768 | Should | P: `test_interfaz.py`: `test_cabecera_con_logo_y_franja_de_tapas_en_todas_las_pantallas`. D: medición en el navegador |
 
 ## 6. Fuera de la versión 1
 
@@ -188,7 +190,7 @@ Todas las decisiones están detalladas en `CLAUDE.md`. Resumen:
 
 ## 8. Estado actual
 
-Las seis etapas de la versión 1 están implementadas y con pruebas automáticas (258 pruebas, todas pasan). La lógica está organizada en clases del dominio; ver `docs/arquitectura.md` y los diagramas UML en `docs/uml/`:
+Las seis etapas de la versión 1 están implementadas y con pruebas automáticas (260 pruebas, todas pasan). La lógica está organizada en clases del dominio; ver `docs/arquitectura.md` y los diagramas UML en `docs/uml/`:
 
 | Etapa | Estado |
 |---|---|

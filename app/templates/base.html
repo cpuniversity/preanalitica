@@ -13,8 +13,13 @@
 </head>
 <body>
   <header class="cabecera">
+    {# Franja con los colores de las tapas en orden CLSI: solo decoración #}
+    <div class="franja-tapas" aria-hidden="true"></div>
     <div class="cabecera-contenido">
-      <span class="marca">Preanalítica</span>
+      <span class="marca">
+        <img class="marca-icono" src="{{ url_for('static', filename='icono.svg') }}" alt="">
+        Preanalítica
+      </span>
 
       {# Los tres pasos; el paso actual se marca como activo #}
       <ol class="pasos">
@@ -25,11 +30,11 @@
             {% if numero == 2 and paso == 3 %}
               <a class="paso-enlace" href="{{ url_for('paginas.examenes') }}">
                 <span class="paso-numero">{{ numero }}</span>
-                <span>{{ titulo }}</span>
+                <span class="paso-titulo" data-texto="{{ titulo }}">{{ titulo }}</span>
               </a>
             {% else %}
               <span class="paso-numero">{{ numero }}</span>
-              <span>{{ titulo }}</span>
+              <span class="paso-titulo" data-texto="{{ titulo }}">{{ titulo }}</span>
             {% endif %}
           </li>
         {% endfor %}
