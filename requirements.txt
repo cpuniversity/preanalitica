@@ -9,3 +9,6 @@ rapidfuzz==3.14.6
 holidays==0.107
 # Lee la configuración del correo de auditoría desde el archivo .env (que no va a Git)
 python-dotenv==1.1.1
+# Revisa el estilo del código (largo de líneas, espacios, importaciones sin usar).
+# Se usa con su configuración por defecto: líneas de máximo 79 caracteres
+flake8==7.5.0

@@ -16,9 +16,14 @@ def test_la_pagina_de_inicio_pide_nombre_y_apellido(cliente):
 
 def test_el_ingreso_explica_para_que_sirve_la_app(cliente):
     html = cliente.get("/").get_data(as_text=True)
-    assert "Los tubos correctos, en el orden correcto, antes de puncionar" in html
-    for paso in ["Escriba su nombre</li>", "Busque los exámenes de la indicación</li>",
-                 "Vea qué tubos usar y qué se deriva</li>"]:
+    assert (
+        "Los tubos correctos, en el orden correcto, antes de puncionar" in html
+    )
+    for paso in [
+        "Escriba su nombre</li>",
+        "Busque los exámenes de la indicación</li>",
+        "Vea qué tubos usar y qué se deriva</li>",
+    ]:
         assert paso in html
 
 
@@ -28,31 +33,44 @@ def test_sin_nombre_no_avanza(cliente):
     assert "Escriba su nombre</p>" in respuesta.get_data(as_text=True)
 
 
-@pytest.fixture(params=["123", "Ana2", "@#$%", "---", "Ana_Soto", ".", "Ana  -  "])
+@pytest.fixture(
+    params=["123", "Ana2", "@#$%", "---", "Ana_Soto", ".", "Ana  -  "]
+)
 def texto_invalido(request):
     return request.param
 
 
 def test_nombre_con_numeros_o_signos_no_avanza(cliente, texto_invalido):
-    respuesta = cliente.post("/", data={"nombre": texto_invalido, "apellido": "Soto"})
+    respuesta = cliente.post(
+        "/", data={"nombre": texto_invalido, "apellido": "Soto"}
+    )
     assert respuesta.status_code == 200
     assert "solo puede tener letras" in respuesta.get_data(as_text=True)
 
 
 def test_apellido_con_numeros_o_signos_no_avanza(cliente, texto_invalido):
-    respuesta = cliente.post("/", data={"nombre": "Ana", "apellido": texto_invalido})
+    respuesta = cliente.post(
+        "/", data={"nombre": "Ana", "apellido": texto_invalido}
+    )
     assert respuesta.status_code == 200
     assert "solo puede tener letras" in respuesta.get_data(as_text=True)
 
 
-@pytest.mark.parametrize("nombre, apellido", [
-    ("María José", "Núñez"),
-    ("Ana", "Pérez-Cotapos"),
-    ("Bernardo", "O'Higgins"),
-    ("Begoña", "Argüello"),
-])
-def test_nombres_reales_con_tildes_guion_o_apostrofo_avanzan(cliente, nombre, apellido):
-    respuesta = cliente.post("/", data={"nombre": nombre, "apellido": apellido})
+@pytest.mark.parametrize(
+    "nombre, apellido",
+    [
+        ("María José", "Núñez"),
+        ("Ana", "Pérez-Cotapos"),
+        ("Bernardo", "O'Higgins"),
+        ("Begoña", "Argüello"),
+    ],
+)
+def test_nombres_reales_con_tildes_guion_o_apostrofo_avanzan(
+    cliente, nombre, apellido
+):
+    respuesta = cliente.post(
+        "/", data={"nombre": nombre, "apellido": apellido}
+    )
     assert respuesta.status_code == 302
 
 

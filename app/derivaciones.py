@@ -25,24 +25,43 @@ import holidays
 
 from app.texto import normalizar
 
-DIAS_SEMANA = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
+DIAS_SEMANA = [
+    "lunes",
+    "martes",
+    "miércoles",
+    "jueves",
+    "viernes",
+    "sábado",
+    "domingo",
+]
 
 # Abreviaturas que usa el listado para los días (0 = lunes ... 6 = domingo)
 ABREVIATURAS = {
-    "lu": 0, "lunes": 0, "l": 0,
-    "ma": 1, "martes": 1,
-    "mi": 2, "miercoles": 2,
-    "ju": 3, "jueves": 3,
-    "vi": 4, "viernes": 4, "v": 4,
-    "sa": 5, "sabado": 5,
-    "do": 6, "domingo": 6,
+    "lu": 0,
+    "lunes": 0,
+    "l": 0,
+    "ma": 1,
+    "martes": 1,
+    "mi": 2,
+    "miercoles": 2,
+    "ju": 3,
+    "jueves": 3,
+    "vi": 4,
+    "viernes": 4,
+    "v": 4,
+    "sa": 5,
+    "sabado": 5,
+    "do": 6,
+    "domingo": 6,
 }
 
 SEGUN_DEMANDA = "según demanda"
 
 # Horarios de corte
-HORA_LIMITE_RECEPCION = 15   # antes de las 15:00 la muestra cuenta como recibida ese día
-HORA_LIMITE_MISMO_DIA = 8    # antes de las 8:00 alcanza a procesarse ese mismo día
+# antes de las 15:00 la muestra cuenta como recibida ese día
+HORA_LIMITE_RECEPCION = 15
+# antes de las 8:00 alcanza a procesarse ese mismo día
+HORA_LIMITE_MISMO_DIA = 8
 
 # Cuántos días hacia adelante se busca un día de proceso o un día para sugerir
 DIAS_A_BUSCAR = 60
@@ -61,10 +80,13 @@ def nombre_del_dia(dia):
 
 # ---------- Días de proceso ----------
 
-def leer_dias_proceso(texto):
-    """Convierte el texto del listado en los días de la semana en que se procesa.
 
-    "LU A VI" -> {0, 1, 2, 3, 4}; "MA Y JU" -> {1, 3}; "SEGÚN DEMANDA" -> SEGUN_DEMANDA.
+def leer_dias_proceso(texto):
+    """Convierte el texto del listado en los
+    días de la semana en que se procesa.
+
+    "LU A VI" -> {0, 1, 2, 3, 4}; "MA Y JU" ->
+    {1, 3}; "SEGÚN DEMANDA" -> SEGUN_DEMANDA.
     Si el texto no se entiende con seguridad, devuelve None.
     """
     texto = normalizar(texto or "")
@@ -75,8 +97,8 @@ def leer_dias_proceso(texto):
         return None
 
     dias = set()
-    anterior = None   # último día leído
-    rango = False     # se leyó una "a" (por ejemplo "lu a vi")
+    anterior = None  # último día leído
+    rango = False  # se leyó una "a" (por ejemplo "lu a vi")
     for palabra in palabras:
         if palabra == "y":
             continue
@@ -87,7 +109,8 @@ def leer_dias_proceso(texto):
             return None  # palabra desconocida: no se adivina
         dia = ABREVIATURAS[palabra]
         if rango:
-            # Del día anterior hasta este, dando la vuelta a la semana si hace falta
+            # Del día anterior hasta este, dando
+            # la vuelta a la semana si hace falta
             actual = anterior
             while actual != dia:
                 actual = (actual + 1) % 7
@@ -102,7 +125,8 @@ def describir_dias(texto):
     """Escribe los días de proceso con palabras completas.
 
     "LU A SA" -> "Lunes a sábado"; "MA Y JU" -> "Martes y jueves";
-    "LU,MI,VI" -> "Lunes, miércoles y viernes". Si no se entiende, deja el texto original.
+    "LU,MI,VI" -> "Lunes, miércoles y viernes".
+    Si no se entiende, deja el texto original.
     """
     dias = leer_dias_proceso(texto)
     if dias == SEGUN_DEMANDA:
@@ -114,13 +138,23 @@ def describir_dias(texto):
         descripcion = "lunes a domingo"
     else:
         # ¿Son días seguidos? (por ejemplo lunes a sábado, o viernes a lunes)
-        primero = next(dia for dia in range(7) if dia in dias and (dia - 1) % 7 not in dias)
+        primero = next(
+            dia
+            for dia in range(7)
+            if dia in dias and (dia - 1) % 7 not in dias
+        )
         seguidos = [(primero + i) % 7 for i in range(len(dias))]
         if len(dias) >= 3 and set(seguidos) == dias:
-            descripcion = f"{DIAS_SEMANA[seguidos[0]]} a {DIAS_SEMANA[seguidos[-1]]}"
+            descripcion = (
+                f"{DIAS_SEMANA[seguidos[0]]} a {DIAS_SEMANA[seguidos[-1]]}"
+            )
         else:
             nombres = [DIAS_SEMANA[dia] for dia in sorted(dias)]
-            descripcion = nombres[0] if len(nombres) == 1 else ", ".join(nombres[:-1]) + " y " + nombres[-1]
+            descripcion = (
+                nombres[0]
+                if len(nombres) == 1
+                else ", ".join(nombres[:-1]) + " y " + nombres[-1]
+            )
     return descripcion[0].upper() + descripcion[1:]
 
 
@@ -132,7 +166,9 @@ def dia_de_recepcion(ahora):
 
 
 def dia_de_proceso(ahora, dias_proceso, feriado=es_feriado):
-    """Primer día en que el laboratorio externo procesaría una muestra tomada ahora."""
+    """Primer día en que el laboratorio externo
+    procesaría una muestra tomada ahora.
+    """
     hoy = ahora.date()
     for adelante in range(DIAS_A_BUSCAR):
         dia = hoy + timedelta(days=adelante)
@@ -147,8 +183,16 @@ def dia_de_proceso(ahora, dias_proceso, feriado=es_feriado):
 
 # ---------- Estabilidad ----------
 
-# Equivalencia de cada unidad de tiempo en horas (se reconoce por cómo empieza la palabra)
-HORAS_POR_UNIDAD = [("min", 1 / 60), ("h", 1), ("dia", 24), ("semana", 168), ("mes", 720), ("ano", 8760)]
+# Equivalencia de cada unidad de tiempo en horas
+# (se reconoce por cómo empieza la palabra)
+HORAS_POR_UNIDAD = [
+    ("min", 1 / 60),
+    ("h", 1),
+    ("dia", 24),
+    ("semana", 168),
+    ("mes", 720),
+    ("ano", 8760),
+]
 
 TEMPERATURAS = {
     "refrigerada": r"refrigerad",
@@ -157,10 +201,20 @@ TEMPERATURAS = {
 }
 
 # Tipos de muestra que puede nombrar el texto de estabilidad
-TIPOS_DE_MUESTRA = ["suero", "plasma", "sangre total", "sangre entera", "sangre completa", "orina", "lcr"]
+TIPOS_DE_MUESTRA = [
+    "suero",
+    "plasma",
+    "sangre total",
+    "sangre entera",
+    "sangre completa",
+    "orina",
+    "lcr",
+]
 
-# Qué tipo de muestra corresponde a cada tubo (validado por el tecnólogo médico).
-# Para el lila, sangre total y plasma EDTA son lo mismo: el laboratorio centrifuga.
+# Qué tipo de muestra corresponde a cada
+# tubo (validado por el tecnólogo médico).
+# Para el lila, sangre total y plasma EDTA
+# son lo mismo: el laboratorio centrifuga.
 TIPOS_POR_TUBO = {
     "amarillo": {"suero"},
     "rojo": {"suero"},
@@ -172,7 +226,9 @@ TIPOS_POR_TUBO = {
 
 
 def a_horas(numero, unidad):
-    """Convierte "7", "dias" en 168 horas. "hrs", "horas" y "h" empiezan con "h"."""
+    """
+    Convierte "7", "dias" en 168 horas. "hrs", "horas" y "h" empiezan con "h".
+    """
     for comienzo, horas in HORAS_POR_UNIDAD:
         if unidad.startswith(comienzo):
             return float(numero.replace(",", ".")) * horas
@@ -180,12 +236,14 @@ def a_horas(numero, unidad):
 
 
 # Piezas que se buscan en el texto de estabilidad, en el orden en que aparecen:
-# una temperatura, un "no aplica", o una duración (número con unidad de tiempo).
+# una temperatura, un "no aplica", o una
+# duración (número con unidad de tiempo).
 # Los números sin unidad, como "(2-8 °C)", no cuentan.
 PIEZAS = re.compile(
     r"(?P<temperatura>refrigerad\w*|ambiente|congelad\w*)"
     r"|(?P<no_aplica>no aplica)"
-    r"|(?P<numero>\d+(?:[.,]\d+)?)\s*(?P<unidad>horas?|hrs?|h|dias?|semanas?|meses|mes|anos?|min)\b"
+    r"|(?P<numero>\d+(?:[.,]\d+)?)\s*"
+    r"(?P<unidad>horas?|hrs?|h|dias?|semanas?|meses|mes|anos?|min)\b"
 )
 
 # Distancia máxima (en letras) entre una temperatura y su duración
@@ -193,32 +251,40 @@ DISTANCIA_MAXIMA = 40
 
 
 def cual_temperatura(palabra):
-    """"refrigerado" -> "refrigerada", "ambiente" -> "ambiente", etc."""
+    """ "refrigerado" -> "refrigerada", "ambiente" -> "ambiente", etc."""
     for temperatura, patron in TEMPERATURAS.items():
         if re.match(patron, palabra):
             return temperatura
 
 
 def duraciones_por_temperatura(texto):
-    """Busca "Refrigerado (2-8 °C) 7 días" y similares. Devuelve {temperatura: horas}.
+    """Busca "Refrigerado (2-8 °C) 7 días" y
+    similares. Devuelve {temperatura: horas}.
 
     Cada duración se asigna a una temperatura:
-    - En general, a la temperatura que va justo antes ("Refrigerado (2-8°C) 7 días").
+    - En general, a la temperatura que va justo
+      antes ("Refrigerado (2-8°C) 7 días").
     - A la que va justo después solo si esa no tiene su propia duración
       ("menor a 24 hrs refrigerada"). Así, en "Ambiente: máximo 4 hrs
       Refrigerada (2-8 °C): 24 hrs", las 4 hrs son de ambiente.
     - Si justo antes hay un "no aplica", la duración no se asigna.
-    Si una temperatura aparece varias veces, se queda con la duración más corta.
+    Si una temperatura aparece varias veces,
+    se queda con la duración más corta.
     """
     piezas = list(PIEZAS.finditer(texto))
     duraciones = {}
 
     def es_temperatura(posicion):
-        return 0 <= posicion < len(piezas) and piezas[posicion].group("temperatura")
+        return 0 <= posicion < len(piezas) and piezas[posicion].group(
+            "temperatura"
+        )
 
     def tiene_su_dato(posicion):
         """¿Después de esta pieza viene una duración o un "no aplica"?"""
-        return 0 <= posicion < len(piezas) and (piezas[posicion].group("numero") or piezas[posicion].group("no_aplica"))
+        return 0 <= posicion < len(piezas) and (
+            piezas[posicion].group("numero")
+            or piezas[posicion].group("no_aplica")
+        )
 
     for posicion, pieza in enumerate(piezas):
         if not pieza.group("numero"):
@@ -226,7 +292,8 @@ def duraciones_por_temperatura(texto):
         horas = a_horas(pieza.group("numero"), pieza.group("unidad"))
         temperatura = None
 
-        # ¿La temperatura que sigue va pegada a esta duración y no tiene la suya?
+        # ¿La temperatura que sigue va pegada
+        # a esta duración y no tiene la suya?
         siguiente = posicion + 1
         if es_temperatura(siguiente) and not tiene_su_dato(siguiente + 1):
             entre = texto[pieza.end():piezas[siguiente].start()]
@@ -240,18 +307,26 @@ def duraciones_por_temperatura(texto):
                 temperatura = cual_temperatura(piezas[anterior].group())
 
         if temperatura:
-            duraciones[temperatura] = min(horas, duraciones.get(temperatura, horas))
+            duraciones[temperatura] = min(
+                horas, duraciones.get(temperatura, horas)
+            )
     return duraciones
 
 
 def tipos_aceptados(examen):
-    """Tipos de muestra que corresponden al examen, según su tubo o su muestra."""
+    """Tipos de muestra que corresponden al examen, según su tubo o su muestra.
+    """
     if examen.es_otra_muestra():
         muestra = normalizar(examen.muestra)
         return {tipo for tipo in TIPOS_DE_MUESTRA if tipo in muestra}
     opciones = examen.opciones_de_tubo() or []
-    aceptados = [TIPOS_POR_TUBO.get(tipo, set()) for opcion in opciones for tipo, _ in opcion]
-    # Si el examen usa tubos con distintos tipos de muestra, no se puede elegir con seguridad
+    aceptados = [
+        TIPOS_POR_TUBO.get(tipo, set())
+        for opcion in opciones
+        for tipo, _ in opcion
+    ]
+    # Si el examen usa tubos con distintos tipos
+    # de muestra, no se puede elegir con seguridad
     if not aceptados or any(tipos != aceptados[0] for tipos in aceptados):
         return set()
     return aceptados[0]
@@ -281,10 +356,18 @@ def leer_estabilidad(examen):
     for numero, (inicio, tipo) in enumerate(menciones):
         if tipo not in aceptados:
             continue
-        fin = menciones[numero + 1][0] if numero + 1 < len(menciones) else len(texto)
-        for temperatura, horas in duraciones_por_temperatura(texto[inicio:fin]).items():
+        fin = (
+            menciones[numero + 1][0]
+            if numero + 1 < len(menciones)
+            else len(texto)
+        )
+        for temperatura, horas in duraciones_por_temperatura(
+            texto[inicio:fin]
+        ).items():
             # Si hay más de un dato que sirve, se usa el más corto (más seguro)
-            duraciones[temperatura] = min(horas, duraciones.get(temperatura, horas))
+            duraciones[temperatura] = min(
+                horas, duraciones.get(temperatura, horas)
+            )
     return duraciones
 
 
@@ -294,15 +377,20 @@ def describir_duracion(horas):
         dias = int(horas // 24)
         return f"{dias} día" if dias == 1 else f"{dias} días"
     horas_redondeadas = round(horas, 1) if horas % 1 else int(horas)
-    return f"{horas_redondeadas} hora" if horas_redondeadas == 1 else f"{horas_redondeadas} horas"
-
-
+    return (
+        f"{horas_redondeadas} hora"
+        if horas_redondeadas == 1
+        else f"{horas_redondeadas} horas"
+    )
 
 
 # ---------- Revisión de un examen derivado ----------
 
+
 def comparar(espera_dias, horas_estabilidad):
-    """Compara la espera con la estabilidad: "alcanza", "al_limite" o "no_alcanza"."""
+    """Compara la espera con la estabilidad:
+    "alcanza", "al_limite" o "no_alcanza".
+    """
     # Con estabilidades de menos de un día, contar en días no es suficiente
     if horas_estabilidad < 24:
         return "al_limite"
@@ -315,7 +403,9 @@ def comparar(espera_dias, horas_estabilidad):
 
 
 def tiempo_de_respuesta(texto):
-    """El listado da el tiempo de respuesta en días hábiles, salvo que diga otra unidad."""
+    """El listado da el tiempo de respuesta en
+    días hábiles, salvo que diga otra unidad.
+    """
     texto = " ".join((texto or "").split())
     if not texto:
         return "dato no disponible"
@@ -327,7 +417,8 @@ class CalendarioDeProceso:
 
     def __init__(self, texto, feriado=es_feriado):
         self.texto = texto or ""
-        self.dias = leer_dias_proceso(texto)   # conjunto de días, SEGUN_DEMANDA o None
+        # conjunto de días, SEGUN_DEMANDA o None
+        self.dias = leer_dias_proceso(texto)
         self.feriado = feriado
 
     def es_segun_demanda(self):
@@ -346,16 +437,23 @@ class CalendarioDeProceso:
         return dia_de_proceso(ahora, self.dias, self.feriado)
 
     def sugerir_dias_de_toma(self, ahora, horas_estabilidad):
-        """Días de la próxima semana en que, tomando la muestra antes de las 15:00, alcanza."""
+        """Días de la próxima semana en que, tomando
+        la muestra antes de las 15:00, alcanza.
+        """
         sugeridos = []
         for adelante in range(DIAS_PARA_SUGERIR + 1):
             dia = ahora.date() + timedelta(days=adelante)
-            # Se supone que se toma a las 10:00 (antes de las 15:00 y después de las 8:00)
+            # Se supone que se toma a las 10:00 (antes
+            # de las 15:00 y después de las 8:00)
             toma = datetime(dia.year, dia.month, dia.day, 10, 0)
             if toma < ahora:
                 continue
             proceso = self.dia_de_proceso(toma)
-            if proceso and comparar((proceso - dia).days, horas_estabilidad) == "alcanza":
+            if (
+                proceso
+                and comparar((proceso - dia).days, horas_estabilidad)
+                == "alcanza"
+            ):
                 sugeridos.append(dia)
         return sugeridos
 
@@ -364,15 +462,20 @@ class CalendarioDeProceso:
 class Estabilidad:
     """La estabilidad de la muestra de un examen, según el listado."""
 
-    texto: str          # tal como lo escribe el listado
-    duraciones: dict    # {temperatura: horas} para el tipo de muestra del examen
+    texto: str  # tal como lo escribe el listado
+    # {temperatura: horas} para el tipo de muestra del examen
+    duraciones: dict
 
     @classmethod
     def de_examen(cls, examen):
-        return cls(" ".join(examen.estabilidad.split()), leer_estabilidad(examen))
+        return cls(
+            " ".join(examen.estabilidad.split()), leer_estabilidad(examen)
+        )
 
     def para_decidir(self):
-        """(temperatura, horas) con que se decide: refrigerada; si no hay, ambiente. None si no hay."""
+        """(temperatura, horas) con que se decide:
+        refrigerada; si no hay, ambiente. None si no hay.
+        """
         for temperatura in ("refrigerada", "ambiente"):
             if temperatura in self.duraciones:
                 return temperatura, self.duraciones[temperatura]
@@ -384,7 +487,8 @@ class RevisionDeDerivacion:
     """Lo que se le muestra a la enfermera sobre un examen derivado."""
 
     examen: object
-    resultado: str              # alcanza, al_limite, no_alcanza, segun_demanda, sin_dia o no_disponible
+    # alcanza, al_limite, no_alcanza, segun_demanda, sin_dia o no_disponible
+    resultado: str
     dias_proceso_texto: str
     estabilidad_texto: str
     dia_proceso: date | None = None
@@ -405,7 +509,9 @@ class RevisionDeDerivacion:
 
 
 class RevisorDeEstabilidad:
-    """Revisa si la estabilidad de cada examen derivado alcanza hasta su día de proceso."""
+    """Revisa si la estabilidad de cada examen
+    derivado alcanza hasta su día de proceso.
+    """
 
     def __init__(self, feriado=es_feriado):
         self.feriado = feriado
@@ -424,7 +530,9 @@ class RevisorDeEstabilidad:
 
         if calendario.es_segun_demanda():
             revision.resultado = "segun_demanda"
-            revision.tiempo_respuesta = tiempo_de_respuesta(examen.tiempo_respuesta)
+            revision.tiempo_respuesta = tiempo_de_respuesta(
+                examen.tiempo_respuesta
+            )
             return revision
         if not calendario.se_entiende():
             revision.resultado = "sin_dia"
@@ -433,7 +541,9 @@ class RevisorDeEstabilidad:
 
         proceso = calendario.dia_de_proceso(ahora)
         revision.dia_proceso = proceso
-        revision.espera_dias = (proceso - dia_de_recepcion(ahora)).days if proceso else None
+        revision.espera_dias = (
+            (proceso - dia_de_recepcion(ahora)).days if proceso else None
+        )
 
         decision = estabilidad.para_decidir()
         if proceso is None or decision is None:
@@ -449,6 +559,12 @@ class RevisorDeEstabilidad:
         return revision
 
     def revisar_derivados(self, examenes, ahora=None):
-        """Revisa todos los exámenes elegidos que se derivan a otro laboratorio."""
+        """
+        Revisa todos los exámenes elegidos que se derivan a otro laboratorio.
+        """
         ahora = ahora or datetime.now()
-        return [self.revisar(examen, ahora) for examen in examenes if examen.es_derivado()]
+        return [
+            self.revisar(examen, ahora)
+            for examen in examenes
+            if examen.es_derivado()
+        ]

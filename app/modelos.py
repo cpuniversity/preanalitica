@@ -4,7 +4,9 @@ import sqlite3
 from pathlib import Path
 
 # Ubicación por defecto de la base (dentro de data/, que no va a Git)
-RUTA_BASE_DATOS = Path(__file__).resolve().parent.parent / "data" / "preanalitica.db"
+RUTA_BASE_DATOS = (
+    Path(__file__).resolve().parent.parent / "data" / "preanalitica.db"
+)
 
 
 def conectar(ruta=RUTA_BASE_DATOS):
@@ -23,21 +25,27 @@ def crear_tablas(conexion):
         -- Los textos se guardan tal como vienen en el listado.
         CREATE TABLE IF NOT EXISTS examenes (
             id                    INTEGER PRIMARY KEY,
-            fila_origen           INTEGER NOT NULL,  -- fila del archivo, para rastrear el dato
+            -- fila del archivo, para rastrear el dato
+            fila_origen           INTEGER NOT NULL,
             codigo_vidalab        TEXT,
             codigo_medisyn        TEXT,
             nombre                TEXT NOT NULL,
             dias_proceso          TEXT,
             tiempo_respuesta      TEXT,
-            muestra               TEXT,              -- tipo de muestra, envase y cantidad
+            -- tipo de muestra, envase y cantidad
+            muestra               TEXT,
             codigo_lab_derivado   TEXT,
             laboratorio           TEXT,
             procedimientos        TEXT,
-            instrucciones         TEXT,              -- preparación, conservación y traslado
-            estabilidad           TEXT,              -- texto copiado desde las instrucciones
-            se_procesa_en_recinto INTEGER NOT NULL,  -- 1 = sí, 0 = se deriva
-            tubos                 TEXT NOT NULL DEFAULT ''  -- ej. "amarillo", "2 celeste",
-                                                     -- "otra muestra" o "" (dato no disponible)
+            -- preparación, conservación y traslado
+            instrucciones         TEXT,
+            -- texto copiado desde las instrucciones
+            estabilidad           TEXT,
+            -- 1 = sí, 0 = se deriva
+            se_procesa_en_recinto INTEGER NOT NULL,
+            -- ej. "amarillo", "2 celeste", "otra muestra" o ""
+            -- ("" = dato no disponible)
+            tubos                 TEXT NOT NULL DEFAULT ''
         );
 
         -- Un registro por cada vez que se importa el listado.
@@ -46,7 +54,8 @@ def crear_tablas(conexion):
             fecha              TEXT NOT NULL,
             archivo            TEXT NOT NULL,
             examenes_cargados  INTEGER NOT NULL,
-            observaciones      INTEGER NOT NULL      -- cantidad de avisos del reporte de revisión
+            -- cantidad de avisos del reporte de revisión
+            observaciones      INTEGER NOT NULL
         );
 
         -- Auditoría: un registro por cada resumen de tubos entregado.
@@ -61,13 +70,15 @@ def crear_tablas(conexion):
             punciones_aparte   TEXT NOT NULL,
             otras_muestras     TEXT NOT NULL,
             sin_tubo           TEXT NOT NULL,
-            derivados          TEXT NOT NULL         -- veredicto de estabilidad de cada derivado
+            -- veredicto de estabilidad de cada derivado
+            derivados          TEXT NOT NULL
         );
 
         -- Envíos semanales de la auditoría ya realizados
         CREATE TABLE IF NOT EXISTS envios_auditoria (
             id                 INTEGER PRIMARY KEY,
-            semana_inicio      TEXT NOT NULL UNIQUE, -- lunes de la semana enviada
+            -- lunes de la semana enviada
+            semana_inicio      TEXT NOT NULL UNIQUE,
             fecha_envio        TEXT NOT NULL,
             archivo            TEXT NOT NULL,
             registros          INTEGER NOT NULL
@@ -76,7 +87,11 @@ def crear_tablas(conexion):
 
     # Bases creadas antes de existir la columna "tubos": se agrega vacía
     # (se llena al volver a importar el listado)
-    columnas = [fila[1] for fila in conexion.execute("PRAGMA table_info(examenes)")]
+    columnas = [
+        fila[1] for fila in conexion.execute("PRAGMA table_info(examenes)")
+    ]
     if "tubos" not in columnas:
-        conexion.execute("ALTER TABLE examenes ADD COLUMN tubos TEXT NOT NULL DEFAULT ''")
+        conexion.execute(
+            "ALTER TABLE examenes ADD COLUMN tubos TEXT NOT NULL DEFAULT ''"
+        )
         conexion.commit()

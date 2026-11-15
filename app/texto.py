@@ -9,7 +9,8 @@ def normalizar(texto):
     Ejemplo: "  ÁCIDO   Úrico " -> "acido urico"
     """
     sin_tildes = "".join(
-        letra for letra in unicodedata.normalize("NFD", texto)
+        letra
+        for letra in unicodedata.normalize("NFD", texto)
         if unicodedata.category(letra) != "Mn"
     )
     return " ".join(sin_tildes.lower().split())

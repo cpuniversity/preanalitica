@@ -1,4 +1,5 @@
-"""Tipos de tubo, orden de extracción (CLSI) y lectura del tubo desde el listado.
+"""Tipos de tubo, orden de extracción
+(CLSI) y lectura del tubo desde el listado.
 
 Todas las reglas de este archivo fueron definidas por el tecnólogo médico.
 """
@@ -13,10 +14,12 @@ from app.texto import normalizar
 class TipoDeTubo:
     """Un tipo de tubo o contenedor de sangre (tubo, frasco o jeringa)."""
 
-    codigo: str          # el nombre corto que usa la app y la tabla del tecnólogo médico
-    nombre: str          # el nombre que ve la enfermera
-    orden: int | None    # posición en el orden de extracción CLSI; None = punción aparte
-    exclusivo: bool      # True = nunca se comparte con otro examen
+    # el nombre corto que usa la app y la tabla del tecnólogo médico
+    codigo: str
+    nombre: str  # el nombre que ve la enfermera
+    # posición en el orden de extracción CLSI; None = punción aparte
+    orden: int | None
+    exclusivo: bool  # True = nunca se comparte con otro examen
 
     def es_puncion_aparte(self):
         """¿Queda fuera del orden de extracción venosa (gases arteriales)?"""
@@ -24,17 +27,30 @@ class TipoDeTubo:
 
 
 # Catálogo de tipos de tubo, validado por el tecnólogo médico
-TIPOS_DE_TUBO = {tipo.codigo: tipo for tipo in [
-    TipoDeTubo("hemocultivo", "Frasco de hemocultivo", 1, exclusivo=True),
-    TipoDeTubo("celeste", "Tubo celeste (citrato)", 2, exclusivo=False),
-    TipoDeTubo("amarillo", "Tubo amarillo con gel", 3, exclusivo=False),
-    TipoDeTubo("rojo", "Tubo rojo", 4, exclusivo=False),
-    TipoDeTubo("verde", "Tubo verde (heparina)", 5, exclusivo=False),
-    TipoDeTubo("jeringa-venosa", "Jeringa con heparina (gases venosos)", 6, exclusivo=True),
-    TipoDeTubo("lila", "Tubo lila (EDTA)", 7, exclusivo=False),
-    TipoDeTubo("gris", "Tubo gris (fluoruro)", 8, exclusivo=False),
-    TipoDeTubo("jeringa-arterial", "Jeringa con heparina (gases arteriales)", None, exclusivo=True),
-]}
+TIPOS_DE_TUBO = {
+    tipo.codigo: tipo
+    for tipo in [
+        TipoDeTubo("hemocultivo", "Frasco de hemocultivo", 1, exclusivo=True),
+        TipoDeTubo("celeste", "Tubo celeste (citrato)", 2, exclusivo=False),
+        TipoDeTubo("amarillo", "Tubo amarillo con gel", 3, exclusivo=False),
+        TipoDeTubo("rojo", "Tubo rojo", 4, exclusivo=False),
+        TipoDeTubo("verde", "Tubo verde (heparina)", 5, exclusivo=False),
+        TipoDeTubo(
+            "jeringa-venosa",
+            "Jeringa con heparina (gases venosos)",
+            6,
+            exclusivo=True,
+        ),
+        TipoDeTubo("lila", "Tubo lila (EDTA)", 7, exclusivo=False),
+        TipoDeTubo("gris", "Tubo gris (fluoruro)", 8, exclusivo=False),
+        TipoDeTubo(
+            "jeringa-arterial",
+            "Jeringa con heparina (gases arteriales)",
+            None,
+            exclusivo=True,
+        ),
+    ]
+}
 
 # Palabras clave para reconocer cada tubo en el texto del listado
 REGLAS = [
@@ -58,23 +74,33 @@ class FormatoDeTuboInvalido(ValueError):
 
 
 def parte_de_adultos(texto):
-    """Si el texto trae indicaciones para adultos y pediátricos, deja solo la de adultos."""
+    """Si el texto trae indicaciones para adultos
+    y pediátricos, deja solo la de adultos.
+    """
     texto = re.split(r"pediatric", texto)[0]
     return re.sub(r"^\s*adultos?\s*:\s*", "", texto).strip()
 
 
 def es_sangre(texto):
     """¿La muestra es de sangre? Mira con qué empieza la descripción."""
-    return bool(re.match(r"(sangre|suero|plasma|tubo|jeringa|frasco hemocultivo|\d+\s*(tubo|frasco))", texto))
+    return bool(
+        re.match(
+            r"(sangre|suero|plasma|tubo|jeringa|frasco hemocultivo"
+            r"|\d+\s*(tubo|frasco))",
+            texto,
+        )
+    )
 
 
 # Comienzos de texto que indican claramente una muestra que no es sangre.
-# Puede haber una cantidad antes: "10 ml orina", "1 torula", "1 - 5 ml del tracto...".
+# Puede haber una cantidad antes: "10 ml
+# orina", "1 torula", "1 - 5 ml del tracto...".
 PATRON_OTRA_MUESTRA = (
     r"(\d+(\s*-\s*\d+)?\s*(ml\s+)?)?"
-    r"(orina|fco orina|deposicion|medula|torula|hisopado|lba|liquido|frotis|lcr|raspado"
-    r"|expectoracion|saliva|vellosidades|fibroblastos|secrecion|escamas|piel|set graham"
-    r"|placa|cultivo|tarjeta pku|papel filtro|tomar en frasco|del tracto|abscesos"
+    r"(orina|fco orina|deposicion|medula|torula|hisopado|lba|liquido"
+    r"|frotis|lcr|raspado|expectoracion|saliva|vellosidades|fibroblastos"
+    r"|secrecion|escamas|piel|set graham|placa|cultivo|tarjeta pku"
+    r"|papel filtro|tomar en frasco|del tracto|abscesos"
     r"|muestras? (de|en|endocervical)|enviar (calculo|gusano))"
 )
 
@@ -85,16 +111,24 @@ def es_otra_muestra(texto):
 
 
 def es_frasco_de_otra_muestra(texto):
-    """¿Es un frasco con una muestra que no es sangre? Ej.: "1 frasco con muestra de deposición".
+    """¿Es un frasco con una muestra que no es sangre?
+    Ej.: "1 frasco con muestra de deposición".
 
-    "1 frasco" al comienzo se lee como sangre (hemocultivo), así que se mira lo que viene después.
+    "1 frasco" al comienzo se lee como sangre
+    (hemocultivo), así que se mira lo que viene después.
     """
     resto = re.sub(r"^\d+\s*frascos?\s+(con\s+)?(muestra\s+de\s+)?", "", texto)
-    return resto != texto and "hemocultivo" not in texto and es_otra_muestra(resto)
+    return (
+        resto != texto
+        and "hemocultivo" not in texto
+        and es_otra_muestra(resto)
+    )
 
 
 def tubos_mencionados(muestra):
-    """Lista los tipos de tubo que menciona el texto (solo la parte de adultos)."""
+    """
+    Lista los tipos de tubo que menciona el texto (solo la parte de adultos).
+    """
     texto = parte_de_adultos(normalizar(muestra))
     tipos = [codigo for codigo, patron in REGLAS if re.search(patron, texto)]
     # La jeringa de gases trae heparina: no es un tubo verde aparte
@@ -150,7 +184,8 @@ def leer_tubos(texto):
       - "lila + celeste"      -> el examen necesita ambos tubos
       - "amarillo o rojo"     -> cualquiera de los dos (se prefiere el primero)
 
-    Devuelve, por ejemplo, [[("lila", 1), ("celeste", 1)]] para "lila + celeste".
+    Devuelve, por ejemplo, [[("lila", 1),
+    ("celeste", 1)]] para "lila + celeste".
     """
     opciones = []
     for texto_opcion in normalizar(texto).split(" o "):
@@ -158,25 +193,35 @@ def leer_tubos(texto):
         for parte in texto_opcion.split("+"):
             coincide = re.fullmatch(r"(?:(\d+)\s+)?([a-z-]+)", parte.strip())
             if not coincide or coincide.group(2) not in TIPOS_DE_TUBO:
-                raise FormatoDeTuboInvalido(f"No se reconoce el tubo «{parte.strip()}»")
+                raise FormatoDeTuboInvalido(
+                    f"No se reconoce el tubo «{parte.strip()}»"
+                )
             cantidad = int(coincide.group(1) or 1)
             if cantidad < 1:
-                raise FormatoDeTuboInvalido(f"Cantidad inválida en «{parte.strip()}»")
+                raise FormatoDeTuboInvalido(
+                    f"Cantidad inválida en «{parte.strip()}»"
+                )
             opcion.append((coincide.group(2), cantidad))
         opciones.append(opcion)
     return opciones
 
 
 def frases_con(texto, patron):
-    """Devuelve las frases del texto que contienen el patrón, tal como están escritas.
+    """Devuelve las frases del texto que
+    contienen el patrón, tal como están escritas.
 
     Se usa para advertencias (ayuno, luz): la enfermera lee la frase original
-    y la app no la interpreta. Así "no requiere ayuno" no se confunde con "ayuno".
+    y la app no la interpreta. Así "no requiere
+    ayuno" no se confunde con "ayuno".
     """
     frases = []
     for linea in texto.split("\n"):
         for frase in re.split(r"(?<=\.)\s+", linea):
             frase = " ".join(frase.split())
-            if frase and re.search(patron, normalizar(frase)) and frase not in frases:
+            if (
+                frase
+                and re.search(patron, normalizar(frase))
+                and frase not in frases
+            ):
                 frases.append(frase)
     return frases

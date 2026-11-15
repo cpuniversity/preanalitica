@@ -1,0 +1,5 @@
+# Configuración de flake8: revisa el estilo del código Python del proyecto.
+# Se usan las reglas por defecto (líneas de máximo 79 caracteres).
+# Solo se excluyen carpetas que no son código del proyecto.
+[flake8]
+exclude = .git,__pycache__,.pytest_cache,venv,data

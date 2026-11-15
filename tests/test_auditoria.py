@@ -27,24 +27,48 @@ from tests.conftest import cargar_examenes_de_prueba
 # Noviembre 2026: lunes 2, lunes 9, miércoles 11
 LUNES_9 = date(2026, 11, 9)
 
-FERRITINA = Examen(nombre="FERRITINA", laboratorio="Laboratorio Externo Prueba")
+FERRITINA = Examen(
+    nombre="FERRITINA", laboratorio="Laboratorio Externo Prueba"
+)
 RESUMEN = ResumenDeTubos(
     tubos=[
-        Contenedor(TIPOS_DE_TUBO["amarillo"], 1, "Laboratorio Externo Prueba", False, [FERRITINA], numero=1),
-        Contenedor(TIPOS_DE_TUBO["lila"], 2, "Laboratorio Clínica Dávila Vespucio", True,
-                   [Examen(nombre="HEMOGRAMA"), Examen(nombre="VHS")], numero=2),
+        Contenedor(
+            TIPOS_DE_TUBO["amarillo"],
+            1,
+            "Laboratorio Externo Prueba",
+            False,
+            [FERRITINA],
+            numero=1,
+        ),
+        Contenedor(
+            TIPOS_DE_TUBO["lila"],
+            2,
+            "Laboratorio Clínica Dávila Vespucio",
+            True,
+            [Examen(nombre="HEMOGRAMA"), Examen(nombre="VHS")],
+            numero=2,
+        ),
     ],
     punciones_aparte=[],
     otras_muestras=[Examen(nombre="ORINA COMPLETA")],
     sin_tubo=[],
     examenes=[],
 )
-DERIVADOS = [RevisionDeDerivacion(examen=FERRITINA, resultado="no_alcanza", dias_proceso_texto="Lunes",
-                                  estabilidad_texto="", dia_proceso=date(2026, 11, 9))]
+DERIVADOS = [
+    RevisionDeDerivacion(
+        examen=FERRITINA,
+        resultado="no_alcanza",
+        dias_proceso_texto="Lunes",
+        estabilidad_texto="",
+        dia_proceso=date(2026, 11, 9),
+    )
+]
 
 
 class EnviadorFalso(EnviadorDeCorreo):
-    """Enviador de prueba: anota lo que se le pide enviar, o falla si se le indica."""
+    """Enviador de prueba: anota lo que se le
+    pide enviar, o falla si se le indica.
+    """
 
     def __init__(self, falla=False):
         self.enviados = []
@@ -55,8 +79,16 @@ class EnviadorFalso(EnviadorDeCorreo):
             raise ErrorDeEnvio("servidor caído")
         self.enviados.append((asunto, cuerpo, adjunto))
 
-CONFIG_PRUEBA = {"destinatarios": ["direccion.de.prueba@example.com"], "remitente": "app@example.com",
-                 "servidor": "", "puerto": 587, "usuario": "", "clave": "", "modo_prueba": True}
+
+CONFIG_PRUEBA = {
+    "destinatarios": ["direccion.de.prueba@example.com"],
+    "remitente": "app@example.com",
+    "servidor": "",
+    "puerto": 587,
+    "usuario": "",
+    "clave": "",
+    "modo_prueba": True,
+}
 
 
 @pytest.fixture
@@ -68,7 +100,9 @@ def conexion(tmp_path):
 
 
 def registrar_en(conexion, momento, enfermera="Ana Soto"):
-    Auditoria(conexion).registrar(enfermera, [FERRITINA], RESUMEN, DERIVADOS, momento)
+    Auditoria(conexion).registrar(
+        enfermera, [FERRITINA], RESUMEN, DERIVADOS, momento
+    )
 
 
 def cantidad_registros(conexion):
@@ -76,6 +110,7 @@ def cantidad_registros(conexion):
 
 
 # ---------- Qué se registra ----------
+
 
 def test_resumen_del_resultado_entregado():
     datos = resumir(RESUMEN, DERIVADOS)
@@ -86,26 +121,46 @@ def test_resumen_del_resultado_entregado():
         "2. 2 × Tubo lila (EDTA) (recinto): HEMOGRAMA, VHS"
     )
     assert datos["otras_muestras"] == "ORINA COMPLETA"
-    assert datos["derivados"] == "FERRITINA: La estabilidad NO alcanza (se procesaría el lunes 9/11)"
+    assert (
+        datos["derivados"]
+        == "FERRITINA: La estabilidad NO alcanza (se procesaría el lunes 9/11)"
+    )
 
 
 def test_la_tabla_no_tiene_datos_del_paciente(conexion):
-    columnas = {fila[1] for fila in conexion.execute("PRAGMA table_info(auditoria)")}
-    assert columnas == {"id", "fecha_hora", "enfermera", "examenes", "total_tubos", "tubos_en_orden",
-                        "punciones_aparte", "otras_muestras", "sin_tubo", "derivados"}
+    columnas = {
+        fila[1] for fila in conexion.execute("PRAGMA table_info(auditoria)")
+    }
+    assert columnas == {
+        "id",
+        "fecha_hora",
+        "enfermera",
+        "examenes",
+        "total_tubos",
+        "tubos_en_orden",
+        "punciones_aparte",
+        "otras_muestras",
+        "sin_tubo",
+        "derivados",
+    }
 
 
 # ---------- Registro al ver los tubos ----------
 
+
 def leer_auditoria(ruta_base):
     con = conectar(ruta_base)
-    filas = [dict(f) for f in con.execute("SELECT * FROM auditoria ORDER BY id")]
+    filas = [
+        dict(f) for f in con.execute("SELECT * FROM auditoria ORDER BY id")
+    ]
     con.close()
     return filas
 
 
 def agregar(cliente, consulta):
-    id_examen = cliente.get(f"/examenes/sugerencias?q={consulta}").get_json()[0]["id"]
+    id_examen = cliente.get(f"/examenes/sugerencias?q={consulta}").get_json()[
+        0
+    ]["id"]
     cliente.post("/examenes/agregar", data={"id": id_examen})
 
 
@@ -130,7 +185,9 @@ def test_recargar_la_pantalla_no_duplica(cliente_con_examenes, ruta_base):
     assert len(leer_auditoria(ruta_base)) == 1
 
 
-def test_cambiar_los_examenes_es_otra_consulta(cliente_con_examenes, ruta_base):
+def test_cambiar_los_examenes_es_otra_consulta(
+    cliente_con_examenes, ruta_base
+):
     agregar(cliente_con_examenes, "hemograma")
     cliente_con_examenes.get("/tubos")
     agregar(cliente_con_examenes, "ferritina")
@@ -138,7 +195,9 @@ def test_cambiar_los_examenes_es_otra_consulta(cliente_con_examenes, ruta_base):
     assert len(leer_auditoria(ruta_base)) == 2
 
 
-def test_nueva_consulta_con_los_mismos_examenes_se_registra(cliente_con_examenes, ruta_base):
+def test_nueva_consulta_con_los_mismos_examenes_se_registra(
+    cliente_con_examenes, ruta_base
+):
     agregar(cliente_con_examenes, "hemograma")
     cliente_con_examenes.get("/tubos")
     cliente_con_examenes.post("/nueva-consulta")
@@ -148,7 +207,8 @@ def test_nueva_consulta_con_los_mismos_examenes_se_registra(cliente_con_examenes
 
 
 def test_la_enfermera_no_ve_un_historial(cliente_con_examenes):
-    # El registro es solo para auditoría: ninguna página muestra búsquedas anteriores
+    # El registro es solo para auditoría: ninguna
+    # página muestra búsquedas anteriores
     agregar(cliente_con_examenes, "hemograma")
     cliente_con_examenes.get("/tubos")
     cliente_con_examenes.post("/nueva-consulta")
@@ -158,7 +218,10 @@ def test_la_enfermera_no_ve_un_historial(cliente_con_examenes):
 
 # ---------- Semana y exportación ----------
 
-@pytest.mark.parametrize("hoy", [date(2026, 11, 9), date(2026, 11, 11), date(2026, 11, 15)])
+
+@pytest.mark.parametrize(
+    "hoy", [date(2026, 11, 9), date(2026, 11, 11), date(2026, 11, 15)]
+)
 def test_semana_anterior_es_de_lunes_a_domingo(hoy):
     assert semana_anterior(hoy) == (date(2026, 11, 2), date(2026, 11, 8))
 
@@ -166,7 +229,8 @@ def test_semana_anterior_es_de_lunes_a_domingo(hoy):
 def test_exportar_solo_lo_anterior_a_esta_semana(conexion, tmp_path):
     registrar_en(conexion, datetime(2026, 11, 3, 10, 0))
     registrar_en(conexion, datetime(2026, 11, 8, 23, 59))
-    registrar_en(conexion, datetime(2026, 11, 9, 0, 1))  # ya es la semana actual
+    # ya es la semana actual
+    registrar_en(conexion, datetime(2026, 11, 9, 0, 1))
     ruta = tmp_path / "auditoria.csv"
 
     assert Auditoria(conexion).exportar(LUNES_9, ruta) == 2
@@ -178,7 +242,10 @@ def test_exportar_solo_lo_anterior_a_esta_semana(conexion, tmp_path):
 
 # ---------- Envío semanal ----------
 
-def test_envio_exitoso_borra_lo_enviado_y_conserva_la_semana_actual(conexion, tmp_path):
+
+def test_envio_exitoso_borra_lo_enviado_y_conserva_la_semana_actual(
+    conexion, tmp_path
+):
     registrar_en(conexion, datetime(2026, 11, 3, 10, 0))
     registrar_en(conexion, datetime(2026, 11, 9, 8, 0))
     enviador = EnviadorFalso()
@@ -195,7 +262,9 @@ def test_envio_exitoso_borra_lo_enviado_y_conserva_la_semana_actual(conexion, tm
 def test_no_se_envia_dos_veces_la_misma_semana(conexion, tmp_path):
     enviador = EnviadorFalso()
     Auditoria(conexion).envio_semanal(LUNES_9, enviador, tmp_path)
-    segundo = Auditoria(conexion).envio_semanal(date(2026, 11, 11), enviador, tmp_path)
+    segundo = Auditoria(conexion).envio_semanal(
+        date(2026, 11, 11), enviador, tmp_path
+    )
     assert segundo is None
     assert len(enviador.enviados) == 1
 
@@ -204,10 +273,15 @@ def test_si_el_correo_falla_no_se_borra_nada(conexion, tmp_path):
     registrar_en(conexion, datetime(2026, 11, 3, 10, 0))
 
     with pytest.raises(ErrorDeEnvio):
-        Auditoria(conexion).envio_semanal(LUNES_9, EnviadorFalso(falla=True), tmp_path)
+        Auditoria(conexion).envio_semanal(
+            LUNES_9, EnviadorFalso(falla=True), tmp_path
+        )
     assert cantidad_registros(conexion) == 1
     # Como no quedó marcado como enviado, se reintenta más tarde
-    assert conexion.execute("SELECT COUNT(*) FROM envios_auditoria").fetchone()[0] == 0
+    assert (
+        conexion.execute("SELECT COUNT(*) FROM envios_auditoria").fetchone()[0]
+        == 0
+    )
 
 
 def test_semana_sin_consultas_igual_se_informa(conexion, tmp_path):
@@ -219,16 +293,23 @@ def test_semana_sin_consultas_igual_se_informa(conexion, tmp_path):
 
 # ---------- Correo ----------
 
+
 def test_modo_prueba_guarda_el_correo_como_archivo(tmp_path):
     adjunto = tmp_path / "auditoria_2026-11-02.csv"
     adjunto.write_text("Fecha;Hora\n", encoding="utf-8-sig")
 
-    ruta = CorreoDePrueba(CONFIG_PRUEBA, tmp_path).enviar("Asunto de prueba", "Cuerpo", adjunto)
+    ruta = CorreoDePrueba(CONFIG_PRUEBA, tmp_path).enviar(
+        "Asunto de prueba", "Cuerpo", adjunto
+    )
 
     mensaje = email.message_from_bytes(ruta.read_bytes())
     assert mensaje["To"] == "direccion.de.prueba@example.com"
     assert mensaje["Subject"] == "Asunto de prueba"
-    adjuntos = [parte.get_filename() for parte in mensaje.walk() if parte.get_filename()]
+    adjuntos = [
+        parte.get_filename()
+        for parte in mensaje.walk()
+        if parte.get_filename()
+    ]
     assert adjuntos == ["auditoria_2026-11-02.csv"]
 
 
@@ -236,50 +317,73 @@ def test_sin_destinatarios_no_se_envia(tmp_path):
     adjunto = tmp_path / "a.csv"
     adjunto.write_text("x")
     with pytest.raises(ErrorDeEnvio, match="destinatarios"):
-        CorreoDePrueba({**CONFIG_PRUEBA, "destinatarios": []}, tmp_path).enviar("A", "B", adjunto)
+        CorreoDePrueba(
+            {**CONFIG_PRUEBA, "destinatarios": []}, tmp_path
+        ).enviar("A", "B", adjunto)
 
 
 def test_envio_real_sin_servidor_configurado_avisa(tmp_path):
     adjunto = tmp_path / "a.csv"
     adjunto.write_text("x")
     with pytest.raises(ErrorDeEnvio, match="servidor"):
-        CorreoSMTP({**CONFIG_PRUEBA, "modo_prueba": False}).enviar("A", "B", adjunto)
+        CorreoSMTP({**CONFIG_PRUEBA, "modo_prueba": False}).enviar(
+            "A", "B", adjunto
+        )
 
 
 def test_envio_real_usa_el_servidor_configurado(tmp_path, monkeypatch):
-    """Se reemplaza el servidor de correo por uno simulado: no sale nada a internet."""
+    """Se reemplaza el servidor de correo por
+    uno simulado: no sale nada a internet.
+    """
     enviados = []
 
     class ServidorSimulado:
         def __init__(self, servidor, puerto, timeout):
             enviados.append(("conexion", servidor, puerto))
+
         def __enter__(self):
             return self
+
         def __exit__(self, *args):
             return False
+
         def starttls(self):
             enviados.append("starttls")
+
         def login(self, usuario, clave):
             enviados.append(("login", usuario))
+
         def send_message(self, mensaje):
             enviados.append(("mensaje", mensaje["To"]))
 
     monkeypatch.setattr("app.auditoria.smtplib.SMTP", ServidorSimulado)
     adjunto = tmp_path / "a.csv"
     adjunto.write_text("x")
-    config = {**CONFIG_PRUEBA, "modo_prueba": False, "servidor": "smtp.example.com", "usuario": "usuario"}
+    config = {
+        **CONFIG_PRUEBA,
+        "modo_prueba": False,
+        "servidor": "smtp.example.com",
+        "usuario": "usuario",
+    }
 
     CorreoSMTP(config).enviar("A", "B", adjunto)
 
-    assert enviados == [("conexion", "smtp.example.com", 587), "starttls", ("login", "usuario"),
-                        ("mensaje", "direccion.de.prueba@example.com")]
+    assert enviados == [
+        ("conexion", "smtp.example.com", 587),
+        "starttls",
+        ("login", "usuario"),
+        ("mensaje", "direccion.de.prueba@example.com"),
+    ]
 
 
 # ---------- Envío automático ----------
 
+
 def test_en_pruebas_no_se_envia_automaticamente(ruta_base, monkeypatch):
     llamado = []
-    monkeypatch.setattr("app.auditoria.threading.Thread", lambda **k: llamado.append(k))
+    monkeypatch.setattr(
+        "app.auditoria.threading.Thread", lambda **k: llamado.append(k)
+    )
     app = create_app()
     app.config["TESTING"] = True
     revisar_envio_automatico(app)
@@ -287,11 +391,15 @@ def test_en_pruebas_no_se_envia_automaticamente(ruta_base, monkeypatch):
 
 
 def test_comando_auditoria_semanal_en_modo_prueba(ruta_base, monkeypatch):
-    monkeypatch.setenv("CORREO_DESTINATARIOS", "direccion.de.prueba@example.com")
+    monkeypatch.setenv(
+        "CORREO_DESTINATARIOS", "direccion.de.prueba@example.com"
+    )
     monkeypatch.setenv("CORREO_MODO_PRUEBA", "1")
     cargar_examenes_de_prueba(ruta_base)
 
-    resultado = create_app().test_cli_runner().invoke(args=["auditoria-semanal"])
+    resultado = (
+        create_app().test_cli_runner().invoke(args=["auditoria-semanal"])
+    )
 
     assert resultado.exit_code == 0
     assert "Auditoría enviada" in resultado.output

@@ -35,8 +35,18 @@ VEREDICTOS = {
     "no_disponible": "Estabilidad: dato no disponible",
 }
 
-COLUMNAS_CSV = ["Fecha", "Hora", "Enfermera", "Exámenes", "Total de tubos", "Tubos en orden",
-                "Punciones aparte", "Otras muestras", "Exámenes sin tubo", "Derivados y estabilidad"]
+COLUMNAS_CSV = [
+    "Fecha",
+    "Hora",
+    "Enfermera",
+    "Exámenes",
+    "Total de tubos",
+    "Tubos en orden",
+    "Punciones aparte",
+    "Otras muestras",
+    "Exámenes sin tubo",
+    "Derivados y estabilidad",
+]
 
 # Si un envío automático falla, se vuelve a intentar después de este tiempo
 SEGUNDOS_ENTRE_REINTENTOS = 60 * 60
@@ -48,6 +58,7 @@ class ErrorDeEnvio(Exception):
 
 # ---------- Textos del registro ----------
 
+
 def describir_laboratorio(contenedor):
     if contenedor.en_recinto:
         return "recinto"
@@ -55,23 +66,38 @@ def describir_laboratorio(contenedor):
 
 
 def describir_contenedor(contenedor):
-    """Ejemplo: "2 × Tubo celeste (citrato) (recinto): TIEMPO DE PROTROMBINA"."""
+    """Ejemplo: "2 × Tubo celeste (citrato) (recinto): TIEMPO DE PROTROMBINA".
+    """
     cantidad = f"{contenedor.cantidad} × " if contenedor.cantidad > 1 else ""
     examenes = ", ".join(examen.nombre for examen in contenedor.examenes)
-    return f"{cantidad}{contenedor.nombre_tubo} ({describir_laboratorio(contenedor)}): {examenes}"
+    laboratorio = describir_laboratorio(contenedor)
+    return f"{cantidad}{contenedor.nombre_tubo} ({laboratorio}): {examenes}"
 
 
 def resumir(resumen, derivados):
-    """Convierte el resultado entregado (ResumenDeTubos y revisiones) en textos para guardar."""
+    """Convierte el resultado entregado (ResumenDeTubos
+    y revisiones) en textos para guardar.
+    """
     return {
         "total_tubos": resumen.total_tubos,
-        "tubos_en_orden": "; ".join(f"{tubo.numero}. {describir_contenedor(tubo)}" for tubo in resumen.tubos),
-        "punciones_aparte": "; ".join(describir_contenedor(c) for c in resumen.punciones_aparte),
-        "otras_muestras": ", ".join(examen.nombre for examen in resumen.otras_muestras),
+        "tubos_en_orden": "; ".join(
+            f"{tubo.numero}. {describir_contenedor(tubo)}"
+            for tubo in resumen.tubos
+        ),
+        "punciones_aparte": "; ".join(
+            describir_contenedor(c) for c in resumen.punciones_aparte
+        ),
+        "otras_muestras": ", ".join(
+            examen.nombre for examen in resumen.otras_muestras
+        ),
         "sin_tubo": ", ".join(examen.nombre for examen in resumen.sin_tubo),
         "derivados": "; ".join(
             f"{d.examen.nombre}: {VEREDICTOS[d.resultado]}"
-            + (f" (se procesaría el {d.dia_proceso_nombre})" if d.dia_proceso_nombre else "")
+            + (
+                f" (se procesaría el {d.dia_proceso_nombre})"
+                if d.dia_proceso_nombre
+                else ""
+            )
             for d in derivados
         ),
     }
@@ -92,16 +118,26 @@ def semana_anterior(hoy):
 # Auditoria no sabe cómo se envía el correo: recibe "un enviador".
 # Hay dos enviadores intercambiables: uno de prueba y uno real.
 
+
 def configuracion_correo():
-    """Lee la configuración del correo desde las variables de entorno (archivo .env)."""
+    """Lee la configuración del correo desde
+    las variables de entorno (archivo .env).
+    """
     return {
-        "destinatarios": [d.strip() for d in os.environ.get("CORREO_DESTINATARIOS", "").split(",") if d.strip()],
-        "remitente": os.environ.get("CORREO_REMITENTE", "preanalitica@localhost"),
+        "destinatarios": [
+            d.strip()
+            for d in os.environ.get("CORREO_DESTINATARIOS", "").split(",")
+            if d.strip()
+        ],
+        "remitente": os.environ.get(
+            "CORREO_REMITENTE", "preanalitica@localhost"
+        ),
         "servidor": os.environ.get("SMTP_SERVIDOR", ""),
         "puerto": int(os.environ.get("SMTP_PUERTO", "587")),
         "usuario": os.environ.get("SMTP_USUARIO", ""),
         "clave": os.environ.get("SMTP_CLAVE", ""),
-        # Mientras no se diga lo contrario, no se envía nada: se guarda el correo como archivo
+        # Mientras no se diga lo contrario, no se
+        # envía nada: se guarda el correo como archivo
         "modo_prueba": os.environ.get("CORREO_MODO_PRUEBA", "1") != "0",
     }
 
@@ -109,14 +145,20 @@ def configuracion_correo():
 def armar_mensaje(config, asunto, cuerpo, adjunto):
     """Arma el correo con el CSV adjunto."""
     if not config["destinatarios"]:
-        raise ErrorDeEnvio("No hay destinatarios configurados (CORREO_DESTINATARIOS).")
+        raise ErrorDeEnvio(
+            "No hay destinatarios configurados (CORREO_DESTINATARIOS)."
+        )
     mensaje = EmailMessage()
     mensaje["From"] = config["remitente"]
     mensaje["To"] = ", ".join(config["destinatarios"])
     mensaje["Subject"] = asunto
     mensaje.set_content(cuerpo)
-    mensaje.add_attachment(Path(adjunto).read_bytes(), maintype="text", subtype="csv",
-                           filename=Path(adjunto).name)
+    mensaje.add_attachment(
+        Path(adjunto).read_bytes(),
+        maintype="text",
+        subtype="csv",
+        filename=Path(adjunto).name,
+    )
     return mensaje
 
 
@@ -125,7 +167,9 @@ class EnviadorDeCorreo(ABC):
 
     @abstractmethod
     def enviar(self, asunto, cuerpo, adjunto):
-        """Envía el correo con el archivo adjunto. Si falla, lanza ErrorDeEnvio."""
+        """
+        Envía el correo con el archivo adjunto. Si falla, lanza ErrorDeEnvio.
+        """
 
 
 class CorreoDePrueba(EnviadorDeCorreo):
@@ -151,25 +195,36 @@ class CorreoSMTP(EnviadorDeCorreo):
     def enviar(self, asunto, cuerpo, adjunto):
         mensaje = armar_mensaje(self.config, asunto, cuerpo, adjunto)
         if not self.config["servidor"]:
-            raise ErrorDeEnvio("No hay servidor de correo configurado (SMTP_SERVIDOR).")
+            raise ErrorDeEnvio(
+                "No hay servidor de correo configurado (SMTP_SERVIDOR)."
+            )
         try:
-            with smtplib.SMTP(self.config["servidor"], self.config["puerto"], timeout=30) as servidor:
+            with smtplib.SMTP(
+                self.config["servidor"], self.config["puerto"], timeout=30
+            ) as servidor:
                 servidor.starttls()
                 if self.config["usuario"]:
-                    servidor.login(self.config["usuario"], self.config["clave"])
+                    servidor.login(
+                        self.config["usuario"], self.config["clave"]
+                    )
                 servidor.send_message(mensaje)
         except (OSError, smtplib.SMTPException) as error:
-            raise ErrorDeEnvio(f"No se pudo enviar el correo: {error}") from error
+            raise ErrorDeEnvio(
+                f"No se pudo enviar el correo: {error}"
+            ) from error
 
 
 def crear_enviador(config, carpeta):
-    """Elige el enviador según la configuración: de prueba (por defecto) o real."""
+    """
+    Elige el enviador según la configuración: de prueba (por defecto) o real.
+    """
     if config["modo_prueba"]:
         return CorreoDePrueba(config, carpeta)
     return CorreoSMTP(config)
 
 
 # ---------- Auditoría ----------
+
 
 class Auditoria:
     """Registra cada resumen entregado y envía el historial semanal."""
@@ -182,8 +237,10 @@ class Auditoria:
         datos = resumir(resumen, derivados)
         with self.conexion:
             self.conexion.execute(
-                "INSERT INTO auditoria (fecha_hora, enfermera, examenes, total_tubos, tubos_en_orden, "
-                "punciones_aparte, otras_muestras, sin_tubo, derivados) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO auditoria (fecha_hora, enfermera, examenes, "
+                "total_tubos, tubos_en_orden, punciones_aparte, "
+                "otras_muestras, sin_tubo, derivados) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     ahora.strftime("%Y-%m-%d %H:%M:%S"),
                     enfermera,
@@ -198,7 +255,9 @@ class Auditoria:
             )
 
     def exportar(self, hasta, ruta):
-        """Escribe en un CSV los registros anteriores a "hasta" (un lunes). Devuelve cuántos son."""
+        """Escribe en un CSV los registros anteriores
+        a "hasta" (un lunes). Devuelve cuántos son.
+        """
         filas = self.conexion.execute(
             "SELECT * FROM auditoria WHERE fecha_hora < ? ORDER BY fecha_hora",
             (f"{hasta.isoformat()} 00:00:00",),
@@ -208,22 +267,33 @@ class Auditoria:
             escritor.writerow(COLUMNAS_CSV)
             for fila in filas:
                 fecha, hora = fila["fecha_hora"].split(" ")
-                escritor.writerow([
-                    fecha, hora, fila["enfermera"], fila["examenes"], fila["total_tubos"],
-                    fila["tubos_en_orden"], fila["punciones_aparte"], fila["otras_muestras"],
-                    fila["sin_tubo"], fila["derivados"],
-                ])
+                escritor.writerow(
+                    [
+                        fecha,
+                        hora,
+                        fila["enfermera"],
+                        fila["examenes"],
+                        fila["total_tubos"],
+                        fila["tubos_en_orden"],
+                        fila["punciones_aparte"],
+                        fila["otras_muestras"],
+                        fila["sin_tubo"],
+                        fila["derivados"],
+                    ]
+                )
         return len(filas)
 
     def envio_semanal(self, hoy, enviador, carpeta):
-        """Exporta, envía con el enviador recibido y borra el historial anterior a esta semana.
+        """Exporta, envía con el enviador recibido y
+        borra el historial anterior a esta semana.
 
         Si la semana anterior ya se envió, no hace nada y devuelve None.
         Si el correo falla, lanza ErrorDeEnvio y no borra nada.
         """
         inicio, fin = semana_anterior(hoy)
         ya_enviada = self.conexion.execute(
-            "SELECT 1 FROM envios_auditoria WHERE semana_inicio = ?", (inicio.isoformat(),)
+            "SELECT 1 FROM envios_auditoria WHERE semana_inicio = ?",
+            (inicio.isoformat(),),
         ).fetchone()
         if ya_enviada:
             return None
@@ -232,39 +302,65 @@ class Auditoria:
         ruta = Path(carpeta) / f"auditoria_{inicio.isoformat()}.csv"
         registros = self.exportar(hasta, ruta)
 
-        asunto = f"Preanalítica: auditoría semanal hasta el domingo {fin.strftime('%d/%m/%Y')}"
+        domingo = fin.strftime('%d/%m/%Y')
+        asunto = f"Preanalítica: auditoría semanal hasta el domingo {domingo}"
         cuerpo = (
-            f"Se adjunta el historial de consultas de Preanalítica hasta el domingo "
-            f"{fin.strftime('%d/%m/%Y')}.\n"
+            "Se adjunta el historial de consultas de Preanalítica "
+            f"hasta el domingo {domingo}.\n"
             f"Consultas registradas: {registros}.\n\n"
-            "El archivo no contiene datos de pacientes. Este historial ya fue eliminado de la base."
+            "El archivo no contiene datos de pacientes. "
+            "Este historial ya fue eliminado de la base."
         )
         enviador.enviar(asunto, cuerpo, ruta)
 
         # Solo si el envío salió bien se borra el historial enviado
         with self.conexion:
-            self.conexion.execute("DELETE FROM auditoria WHERE fecha_hora < ?", (f"{hasta.isoformat()} 00:00:00",))
             self.conexion.execute(
-                "INSERT INTO envios_auditoria (semana_inicio, fecha_envio, archivo, registros) VALUES (?, ?, ?, ?)",
-                (inicio.isoformat(), datetime.now().isoformat(timespec="seconds"), ruta.name, registros),
+                "DELETE FROM auditoria WHERE fecha_hora < ?",
+                (f"{hasta.isoformat()} 00:00:00",),
             )
-        return {"archivo": ruta, "registros": registros, "desde": inicio, "hasta": fin}
+            self.conexion.execute(
+                "INSERT INTO envios_auditoria "
+                "(semana_inicio, fecha_envio, archivo, registros) "
+                "VALUES (?, ?, ?, ?)",
+                (
+                    inicio.isoformat(),
+                    datetime.now().isoformat(timespec="seconds"),
+                    ruta.name,
+                    registros,
+                ),
+            )
+        return {
+            "archivo": ruta,
+            "registros": registros,
+            "desde": inicio,
+            "hasta": fin,
+        }
 
 
 # ---------- Envío automático ----------
 
 _bloqueo = threading.Lock()
-_semana_enviada = None   # lunes de la semana anterior que ya se revisó en esta ejecución
-_ultimo_intento = 0.0    # para no reintentar en cada consulta si el correo falla
+# lunes de la semana anterior que ya se revisó en esta ejecución
+_semana_enviada = None
+# para no reintentar en cada consulta si el correo falla
+_ultimo_intento = 0.0
 
 
 def revisar_envio_automatico(app):
-    """Se llama en cada consulta: si toca enviar la auditoría, lo hace en segundo plano."""
+    """Se llama en cada consulta: si toca enviar
+    la auditoría, lo hace en segundo plano.
+    """
     global _ultimo_intento
-    if app.config.get("TESTING") or not app.config.get("AUDITORIA_AUTOMATICA", True):
+    if app.config.get("TESTING") or not app.config.get(
+        "AUDITORIA_AUTOMATICA", True
+    ):
         return
     inicio, _ = semana_anterior(date.today())
-    if _semana_enviada == inicio or time.time() - _ultimo_intento < SEGUNDOS_ENTRE_REINTENTOS:
+    if (
+        _semana_enviada == inicio
+        or time.time() - _ultimo_intento < SEGUNDOS_ENTRE_REINTENTOS
+    ):
         return
     if not _bloqueo.acquire(blocking=False):
         return  # ya hay un envío en curso
@@ -278,11 +374,16 @@ def revisar_envio_automatico(app):
                 crear_tablas(conexion)
                 carpeta = Path(ruta_base).parent
                 enviador = crear_enviador(configuracion_correo(), carpeta)
-                Auditoria(conexion).envio_semanal(date.today(), enviador, carpeta)
+                Auditoria(conexion).envio_semanal(
+                    date.today(), enviador, carpeta
+                )
             _semana_enviada = inicio
             _ultimo_intento = 0.0
-        except Exception as error:  # se reintenta más tarde; la enfermera no se ve afectada
-            app.logger.warning("No se pudo enviar la auditoría semanal: %s", error)
+        # se reintenta más tarde; la enfermera no se ve afectada
+        except Exception as error:
+            app.logger.warning(
+                "No se pudo enviar la auditoría semanal: %s", error
+            )
         finally:
             _bloqueo.release()
 
@@ -299,14 +400,24 @@ def comando_auditoria_semanal():
         try:
             carpeta = Path(ruta_base).parent
             enviador = crear_enviador(configuracion_correo(), carpeta)
-            resultado = Auditoria(conexion).envio_semanal(date.today(), enviador, carpeta)
+            resultado = Auditoria(conexion).envio_semanal(
+                date.today(), enviador, carpeta
+            )
         except ErrorDeEnvio as error:
-            raise click.ClickException(f"{error} No se borró nada del historial.")
+            raise click.ClickException(
+                f"{error} No se borró nada del historial."
+            )
     if resultado is None:
         click.echo("La auditoría de la semana anterior ya fue enviada.")
         return
-    click.echo(f"Auditoría enviada: {resultado['registros']} consultas hasta el domingo "
-               f"{resultado['hasta'].strftime('%d/%m/%Y')}.")
+    click.echo(
+        f"Auditoría enviada: {resultado['registros']} consultas "
+        "hasta el domingo "
+        f"{resultado['hasta'].strftime('%d/%m/%Y')}."
+    )
     click.echo(f"Archivo: {resultado['archivo']}")
     if configuracion_correo()["modo_prueba"]:
-        click.echo("Modo prueba: el correo se guardó como archivo .eml en la carpeta data, no se envió.")
+        click.echo(
+            "Modo prueba: el correo se guardó como archivo .eml "
+            "en la carpeta data, no se envió."
+        )

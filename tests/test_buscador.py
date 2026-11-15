@@ -1,4 +1,6 @@
-"""Pruebas del buscador y de la selección de exámenes. Usan exámenes inventados."""
+"""
+Pruebas del buscador y de la selección de exámenes. Usan exámenes inventados.
+"""
 
 import pytest
 
@@ -28,6 +30,7 @@ def nombres(resultados):
 
 # ---------- Búsqueda ----------
 
+
 def test_encuentra_sin_tildes(examenes):
     assert nombres(buscar("acido urico", examenes)) == ["ÁCIDO ÚRICO"]
 
@@ -41,25 +44,36 @@ def test_encuentra_sin_escribir_el_nombre_completo(examenes):
 
 
 def test_encuentra_con_palabras_incompletas(examenes):
-    assert nombres(buscar("ac fol", examenes)) == ["ÁCIDO FÓLICO (FOLATO SÉRICO)"]
+    assert nombres(buscar("ac fol", examenes)) == [
+        "ÁCIDO FÓLICO (FOLATO SÉRICO)"
+    ]
 
 
 def test_encuentra_por_sinonimo_entre_parentesis(examenes):
-    assert nombres(buscar("folato", examenes)) == ["ÁCIDO FÓLICO (FOLATO SÉRICO)"]
+    assert nombres(buscar("folato", examenes)) == [
+        "ÁCIDO FÓLICO (FOLATO SÉRICO)"
+    ]
 
 
-@pytest.mark.parametrize("con_error, esperado", [
-    ("glucoza", "GLUCOSA"),
-    ("feritina", "FERRITINA"),
-    ("hemogrma", "HEMOGRAMA COMPLETO"),
-])
+@pytest.mark.parametrize(
+    "con_error, esperado",
+    [
+        ("glucoza", "GLUCOSA"),
+        ("feritina", "FERRITINA"),
+        ("hemogrma", "HEMOGRAMA COMPLETO"),
+    ],
+)
 def test_tolera_errores_de_tipeo(examenes, con_error, esperado):
     assert nombres(buscar(con_error, examenes))[0] == esperado
 
 
 def test_no_autoselecciona_entrega_una_lista_de_sugerencias(examenes):
-    # "gluc" calza con dos exámenes: se muestran ambos para que la enfermera elija
-    assert nombres(buscar("gluc", examenes)) == ["GLUCOSA", "GLUCOSA POST CARGA"]
+    # "gluc" calza con dos exámenes: se muestran
+    # ambos para que la enfermera elija
+    assert nombres(buscar("gluc", examenes)) == [
+        "GLUCOSA",
+        "GLUCOSA POST CARGA",
+    ]
 
 
 def test_ordena_primero_lo_escrito_sin_error(examenes):
@@ -67,18 +81,28 @@ def test_ordena_primero_lo_escrito_sin_error(examenes):
     # una coincidencia con error de tipeo nunca queda antes
     assert nombres(buscar("ferritin", examenes))[0] == "FERRITINA"
     # Con igual parecido, va primero el nombre más corto
-    assert nombres(buscar("glucosa", examenes)) == ["GLUCOSA", "GLUCOSA POST CARGA"]
+    assert nombres(buscar("glucosa", examenes)) == [
+        "GLUCOSA",
+        "GLUCOSA POST CARGA",
+    ]
 
 
 def test_sinonimo_entre_parentesis_cuenta_como_nombre_principal():
-    # Caso real: "glucosa" debe mostrar la glicemia, aunque haya muchos exámenes
+    # Caso real: "glucosa" debe mostrar la
+    # glicemia, aunque haya muchos exámenes
     # que empiezan con "GLUCOSA" y llenan la lista de 8 sugerencias
     nombres_examenes = [
-        "GLUCOSA (EN LIQUIDOS)", "GLUCOSA POST ALMUERZO", "GLUCOSA POST DESAYUNO",
-        "GLUCOSA 6 FOSFATO DESHIDROGENASA", "GLUCOSA EN ORINA 24 HRS (GLUCOSURIA 24 HRS)",
-        "GLUCOSA EN ORINA AISLADA (GLUCOSURIA AISLADA)", "GLUCOSA TEST DE TOLERANCIA 2 MUESTRAS BASAL Y 120",
-        "GLUCOSA TEST DE TOLERANCIA 3 MUESTRAS BASAL 1 HORA Y 2 HRS", "GLUCOSA TEST DE TOLERANCIA PROLONGADO 5 MUESTRAS",
-        "GLICEMIA (GLUCOSA EN SANGRE)", "HORMONA DEL CRECIMIENTO POST ESTIMULO DE GLUCOSA",
+        "GLUCOSA (EN LIQUIDOS)",
+        "GLUCOSA POST ALMUERZO",
+        "GLUCOSA POST DESAYUNO",
+        "GLUCOSA 6 FOSFATO DESHIDROGENASA",
+        "GLUCOSA EN ORINA 24 HRS (GLUCOSURIA 24 HRS)",
+        "GLUCOSA EN ORINA AISLADA (GLUCOSURIA AISLADA)",
+        "GLUCOSA TEST DE TOLERANCIA 2 MUESTRAS BASAL Y 120",
+        "GLUCOSA TEST DE TOLERANCIA 3 MUESTRAS BASAL 1 HORA Y 2 HRS",
+        "GLUCOSA TEST DE TOLERANCIA PROLONGADO 5 MUESTRAS",
+        "GLICEMIA (GLUCOSA EN SANGRE)",
+        "HORMONA DEL CRECIMIENTO POST ESTIMULO DE GLUCOSA",
     ]
     examenes = [Examen(nombre=n) for n in nombres_examenes]
     resultado = nombres(buscar("glucosa", examenes))
@@ -90,7 +114,9 @@ def test_sinonimo_entre_parentesis_cuenta_como_nombre_principal():
 def test_letra_y_numero_con_o_sin_guion():
     vitamina = [Examen(nombre="VITAMINA B-12 (COBALAMINA)")]
     assert nombres(buscar("b12", vitamina)) == ["VITAMINA B-12 (COBALAMINA)"]
-    assert nombres(buscar("vitamina b-12", vitamina)) == ["VITAMINA B-12 (COBALAMINA)"]
+    assert nombres(buscar("vitamina b-12", vitamina)) == [
+        "VITAMINA B-12 (COBALAMINA)"
+    ]
 
 
 def test_con_menos_de_2_letras_no_busca(examenes):
@@ -114,22 +140,43 @@ def test_muestra_como_maximo_8_sugerencias(examenes):
 
 # ---------- Etiqueta recinto / derivación ----------
 
+
 def test_etiqueta_recinto():
-    examen = Examen(nombre="EXAMEN PRUEBA", laboratorio="Laboratorio Clínica Dávila Vespucio", se_procesa_en_recinto=1)
-    assert examen.etiqueta == {"tipo": "recinto", "texto": "Se procesa en el recinto"}
+    examen = Examen(
+        nombre="EXAMEN PRUEBA",
+        laboratorio="Laboratorio Clínica Dávila Vespucio",
+        se_procesa_en_recinto=1,
+    )
+    assert examen.etiqueta == {
+        "tipo": "recinto",
+        "texto": "Se procesa en el recinto",
+    }
 
 
 def test_etiqueta_deriva_con_nombre_del_laboratorio():
-    examen = Examen(nombre="EXAMEN PRUEBA", laboratorio="Laboratorio Externo Prueba", se_procesa_en_recinto=0)
-    assert examen.etiqueta == {"tipo": "deriva", "texto": "Se deriva a Laboratorio Externo Prueba"}
+    examen = Examen(
+        nombre="EXAMEN PRUEBA",
+        laboratorio="Laboratorio Externo Prueba",
+        se_procesa_en_recinto=0,
+    )
+    assert examen.etiqueta == {
+        "tipo": "deriva",
+        "texto": "Se deriva a Laboratorio Externo Prueba",
+    }
 
 
 def test_etiqueta_sin_laboratorio_dice_dato_no_disponible():
-    examen = Examen(nombre="EXAMEN PRUEBA", laboratorio="", se_procesa_en_recinto=0)
-    assert examen.etiqueta == {"tipo": "aviso", "texto": "Laboratorio: dato no disponible"}
+    examen = Examen(
+        nombre="EXAMEN PRUEBA", laboratorio="", se_procesa_en_recinto=0
+    )
+    assert examen.etiqueta == {
+        "tipo": "aviso",
+        "texto": "Laboratorio: dato no disponible",
+    }
 
 
 # ---------- Sugerencias desde la pantalla ----------
+
 
 def test_sugerencias_sin_identificarse_no_responde(cliente):
     respuesta = cliente.get("/examenes/sugerencias?q=gluc")
@@ -137,17 +184,25 @@ def test_sugerencias_sin_identificarse_no_responde(cliente):
 
 
 def test_sugerencias_devuelve_nombre_y_etiqueta(cliente_con_examenes):
-    datos = cliente_con_examenes.get("/examenes/sugerencias?q=ferri").get_json()
+    datos = cliente_con_examenes.get(
+        "/examenes/sugerencias?q=ferri"
+    ).get_json()
     assert len(datos) == 1
     assert datos[0]["nombre"] == "FERRITINA"
-    assert datos[0]["etiqueta"]["texto"] == "Se deriva a Laboratorio Externo Prueba"
+    assert (
+        datos[0]["etiqueta"]["texto"]
+        == "Se deriva a Laboratorio Externo Prueba"
+    )
     assert datos[0]["ya_seleccionado"] is False
 
 
 # ---------- Selección de exámenes ----------
 
+
 def id_de(cliente, consulta):
-    return cliente.get(f"/examenes/sugerencias?q={consulta}").get_json()[0]["id"]
+    return cliente.get(f"/examenes/sugerencias?q={consulta}").get_json()[0][
+        "id"
+    ]
 
 
 def test_agregar_examen_lo_muestra_en_la_lista(cliente_con_examenes):
@@ -165,7 +220,9 @@ def test_no_agrega_el_mismo_examen_dos_veces(cliente_con_examenes):
     html = cliente_con_examenes.get("/examenes").get_data(as_text=True)
     assert "Exámenes seleccionados (1)" in html
     # La sugerencia avisa que ya está agregado
-    assert cliente_con_examenes.get("/examenes/sugerencias?q=ferritina").get_json()[0]["ya_seleccionado"]
+    assert cliente_con_examenes.get(
+        "/examenes/sugerencias?q=ferritina"
+    ).get_json()[0]["ya_seleccionado"]
 
 
 def test_no_agrega_un_examen_que_no_existe(cliente_con_examenes):
@@ -192,18 +249,33 @@ def test_ver_tubos_sin_examenes_vuelve_al_buscador(cliente_con_examenes):
 
 
 def test_ver_tubos_muestra_los_examenes_elegidos(cliente_con_examenes):
-    cliente_con_examenes.post("/examenes/agregar", data={"id": id_de(cliente_con_examenes, "ferritina")})
+    cliente_con_examenes.post(
+        "/examenes/agregar",
+        data={"id": id_de(cliente_con_examenes, "ferritina")},
+    )
     html = cliente_con_examenes.get("/tubos").get_data(as_text=True)
     assert "FERRITINA" in html
 
 
 def test_pantalla_de_tubos_agrupa_y_ordena(cliente_con_examenes):
-    for consulta in ["ferritina", "acido folico", "acido urico", "hemograma", "orina", "sin laboratorio"]:
-        cliente_con_examenes.post("/examenes/agregar", data={"id": id_de(cliente_con_examenes, consulta)})
+    for consulta in [
+        "ferritina",
+        "acido folico",
+        "acido urico",
+        "hemograma",
+        "orina",
+        "sin laboratorio",
+    ]:
+        cliente_con_examenes.post(
+            "/examenes/agregar",
+            data={"id": id_de(cliente_con_examenes, consulta)},
+        )
     html = cliente_con_examenes.get("/tubos").get_data(as_text=True)
 
-    # Ferritina y ácido fólico van al mismo laboratorio externo: comparten tubo amarillo.
-    # Ácido úrico (recinto) va en otro amarillo. Hemograma en lila. Total: 3 tubos.
+    # Ferritina y ácido fólico van al mismo
+    # laboratorio externo: comparten tubo amarillo.
+    # Ácido úrico (recinto) va en otro amarillo.
+    # Hemograma en lila. Total: 3 tubos.
     assert '<span class="total-numero">3</span>' in html
     assert html.count("Tubo amarillo con gel") == 2
     assert "Tubo lila (EDTA)" in html
@@ -212,7 +284,9 @@ def test_pantalla_de_tubos_agrupa_y_ordena(cliente_con_examenes):
     assert "Otras muestras" in html and "ORINA COMPLETA" in html
     # La muestra de prueba termina en punto: se muestra sin él
     assert "MUESTRA DE PRUEBA</div>" in html
-    assert "Tubo: dato no disponible" in html and "EXAMEN SIN LABORATORIO" in html
+    assert (
+        "Tubo: dato no disponible" in html and "EXAMEN SIN LABORATORIO" in html
+    )
     assert "Imprimir resumen" in html
     # Ferritina y ácido fólico se derivan: aparecen en su sección.
     # Sus datos de prueba no traen día de proceso, así que se avisa.
@@ -221,16 +295,24 @@ def test_pantalla_de_tubos_agrupa_y_ordena(cliente_con_examenes):
 
 
 def test_nueva_consulta_borra_la_seleccion(cliente_con_examenes):
-    cliente_con_examenes.post("/examenes/agregar", data={"id": id_de(cliente_con_examenes, "ferritina")})
+    cliente_con_examenes.post(
+        "/examenes/agregar",
+        data={"id": id_de(cliente_con_examenes, "ferritina")},
+    )
     cliente_con_examenes.post("/nueva-consulta")
     html = cliente_con_examenes.get("/examenes").get_data(as_text=True)
     assert "Exámenes seleccionados (0)" in html
 
 
 def test_cambiar_de_enfermera_borra_la_seleccion(cliente_con_examenes):
-    cliente_con_examenes.post("/examenes/agregar", data={"id": id_de(cliente_con_examenes, "ferritina")})
+    cliente_con_examenes.post(
+        "/examenes/agregar",
+        data={"id": id_de(cliente_con_examenes, "ferritina")},
+    )
     cliente_con_examenes.get("/cambiar")
-    cliente_con_examenes.post("/", data={"nombre": "Luis", "apellido": "Rojas"})
+    cliente_con_examenes.post(
+        "/", data={"nombre": "Luis", "apellido": "Rojas"}
+    )
     html = cliente_con_examenes.get("/examenes").get_data(as_text=True)
     assert "Exámenes seleccionados (0)" in html
 

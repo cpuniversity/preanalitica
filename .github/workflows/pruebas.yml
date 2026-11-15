@@ -1,5 +1,6 @@
-# Integración continua: GitHub corre las pruebas automáticas en cada push.
-# Si alguna prueba falla, GitHub lo marca con una cruz roja en el commit.
+# Integración continua: en cada push, GitHub revisa el estilo del código con
+# flake8 y corre las pruebas automáticas. Si flake8 da algún aviso o alguna
+# prueba falla, GitHub lo marca con una cruz roja en el commit.
 # Las pruebas usan exámenes inventados y una base temporal: no necesitan el
 # listado real, la base de data/ ni el archivo .env, y nunca envían correos.
 
@@ -25,6 +26,9 @@ jobs:
 
       - name: Instalar las librerías del proyecto
         run: pip install -r requirements.txt
+
+      - name: Revisar el estilo con flake8
+        run: flake8 --count --show-source --statistics
 
       - name: Correr las pruebas
         run: pytest -v
