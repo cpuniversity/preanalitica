@@ -21,6 +21,7 @@ copy .env.example .env                             # configuración del correo (
 flask --app app importar data/listado_tecnico.csv  # carga el listado en la base
 flask --app app run --debug                        # abre http://127.0.0.1:5000
 pytest                                             # corre las pruebas automáticas
+flake8                                             # revisa el estilo del código
 ```
 
 El listado técnico del laboratorio no está en el repositorio: se copia a mano
@@ -33,5 +34,5 @@ en `data/`.
 - [Gestión ágil](docs/gestion_agil/): objetivo, backlog, historias e iteraciones
 - [Plan de pruebas](docs/plan_de_pruebas.md) e [informe de resultados](docs/informe_de_pruebas.md)
 - [Plan de despliegue y operación](docs/despliegue.md)
-- [Cierre del proyecto](docs/cierre.md) (borrador)
+- [Cierre del proyecto](docs/cierre.md)
 - [Guía de la tabla de tubos](docs/tabla_de_tubos.md) para el tecnólogo médico

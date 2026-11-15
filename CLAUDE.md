@@ -97,7 +97,7 @@ Si algo no está en este documento, pregunta antes de implementarlo.
 - rapidfuzz para la búsqueda tolerante a errores. Normaliza el texto (minúsculas, sin tildes) antes de comparar.
 - holidays para los feriados de Chile.
 - python-dotenv para leer la configuración del correo desde `.env`.
-- pytest para las pruebas.
+- pytest para las pruebas y flake8 para el estilo del código (reglas por defecto: líneas de máximo 79 caracteres; sin avisos). GitHub Actions corre los dos en cada push.
 
 ## Estructura
 
@@ -106,8 +106,9 @@ Preanalitica/
   CLAUDE.md
   README.md            # presentación del repositorio e insignia de las pruebas
   .env.example         # ejemplo de configuración del correo (el .env real no va a Git)
+  .flake8              # configuración de flake8 (solo excluye carpetas que no son código)
   .github/workflows/
-    pruebas.yml        # GitHub Actions: corre pytest en cada push
+    pruebas.yml        # GitHub Actions: corre flake8 y pytest en cada push
   docs/
     requisitos.md      # requisitos, decisiones y estado del proyecto
     plan_de_pruebas.md # qué se prueba, cómo y criterios de aprobación
@@ -153,7 +154,7 @@ Hay una maqueta de tres pantallas (Ingreso, Búsqueda de exámenes, Resumen de t
 - Cabecera con el logo (ícono del tubo) y el nombre "Preanalítica", los tres pasos (Identificación, Exámenes, Tubos) y, desde el paso 2, el nombre de la enfermera con la opción "Cambiar". Arriba, una franja fina con los colores de las tapas en orden CLSI: es solo decoración (oculta para lectores de pantalla y al imprimir) y nunca se usa cerca de los tubos reales.
 - Pantalla 1: tarjeta en dos columnas. A la izquierda, en el color de acento, el logo, la frase "Los tubos correctos, en el orden correcto, antes de puncionar" y los tres pasos. A la derecha, nombre y apellido, botón "Continuar" y aviso de que no se ingresan datos del paciente.
 - Pantalla 2: buscador grande con sugerencias (cada una con si se procesa en el recinto o se deriva) y, al lado, la lista de exámenes seleccionados con botón para quitar cada uno y el botón "Ver qué tubos usar" siempre visible.
-- Pantalla 3: tubos numerados en orden de extracción, con su laboratorio y sus exámenes, y el total de tubos. Arriba solo va la alerta roja cuando una estabilidad no alcanza; no hay recuadros amarillos. El ayuno y la luz van al lado del nombre de cada examen, destacados en amarillo y entre paréntesis, con la frase del listado (ej.: "PROTEÍNAS SANGRE (8 HRS AYUNO)"). Los exámenes con "Tubo: dato no disponible" van en su propia tarjeta después de los tubos numerados. La etiqueta de estabilidad del tubo no se muestra cuando la estabilidad no está disponible (lo explica el detalle de abajo). Luego las otras muestras (sin subtítulo), los exámenes que se derivan con su revisión de estabilidad, y al final los botones "Volver a exámenes", "Imprimir resumen" y "Nueva consulta".
+- Pantalla 3: tubos numerados en orden de extracción, con su laboratorio y sus exámenes, y el total de tubos. Arriba solo va la alerta roja cuando una estabilidad no alcanza; no hay recuadros amarillos. El ayuno y la luz van al lado del nombre de cada examen, destacados en amarillo y entre paréntesis, con la frase del listado (ej.: "PROTEÍNAS SANGRE (8 HRS AYUNO)"). Los exámenes con "Tubo: dato no disponible" van en su propia tarjeta después de los tubos numerados. La etiqueta de estabilidad del tubo no se muestra cuando la estabilidad no está disponible (lo explica el detalle de abajo). En el detalle de cada derivado la estabilidad aparece una sola vez: "Estabilidad según el listado: …" y, si la app no pudo revisarla, termina con "Consultar con el laboratorio." Luego las otras muestras (sin subtítulo), los exámenes que se derivan con su revisión de estabilidad, y al final los botones "Volver a exámenes", "Imprimir resumen" y "Nueva consulta".
 - Solo escritorio: no hace falta diseño para celular en la versión 1.
 
 ## Cómo trabajar
@@ -179,4 +180,5 @@ flask --app app importar data/listado_tecnico.csv  # carga el listado en la base
 flask --app app run --debug                        # abre http://127.0.0.1:5000
 flask --app app auditoria-semanal                  # envía la auditoría a mano
 pytest
+flake8                                             # revisa el estilo (debe dar 0 avisos)
 ```

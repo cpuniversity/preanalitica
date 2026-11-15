@@ -103,6 +103,8 @@ nueva, una persona del equipo revisa con el listado real:
 
 - **Todas** las pruebas automáticas pasan, en el computador y en GitHub Actions.
   Un solo fallo detiene el cambio hasta corregirlo.
+- **flake8 sin avisos**, con sus reglas por defecto (líneas de máximo 79
+  caracteres). GitHub Actions lo revisa antes de correr las pruebas.
 - Toda regla clínica nueva o modificada llega con su prueba.
 - Si se corrige un error, se agrega una prueba que lo habría detectado (así
   pasó, por ejemplo, con los formatos de estabilidad de la iteración I4).
@@ -113,7 +115,7 @@ nueva, una persona del equipo revisa con el listado real:
 
 | Momento | Qué se corre |
 |---|---|
-| Antes de cada commit | `pytest` en el computador |
-| En cada `push` a GitHub | GitHub Actions corre `pytest` y marca el commit con ✔ o ✘ |
+| Antes de cada commit | `pytest` y `flake8` en el computador |
+| En cada `push` a GitHub | GitHub Actions revisa el estilo con `flake8` y corre `pytest`; marca el commit con ✔ o ✘ |
 | Después de cada funcionalidad | Revisión en el navegador (sección 7) |
 | Antes de la entrega final | Validación con el tecnólogo médico (HU-20) |

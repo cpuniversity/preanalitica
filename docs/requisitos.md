@@ -91,7 +91,7 @@ cuando el tecnólogo médico valide la app con casos reales (HU-20).
 | RF-4.3 | La estabilidad se decide con la refrigerada o, si no existe, con la ambiente (la congelada solo se informa), y con el tipo de muestra del tubo del examen | Must | P: `test_sin_refrigerada_se_usa_la_ambiente`, `test_solo_congelada_no_se_usa_para_decidir`, `test_se_usa_la_estabilidad_del_tipo_de_muestra_del_tubo`, `test_lila_sangre_total_y_plasma_son_lo_mismo_se_usa_la_mas_corta`, `test_tipo_de_muestra_que_no_corresponde_al_tubo_no_se_adivina` |
 | RF-4.4 | El veredicto es "la estabilidad lo permite", "al límite, consultar" o "NO alcanza" | Must | P: `test_comparar`, `test_jueves_solo_lunes_estabilidad_7_dias_alcanza`, `test_viernes_antes_y_despues_de_las_15` |
 | RF-4.5 | Si no alcanza, se advierte de forma destacada y se sugieren días de toma de la próxima semana | Should | P: `test_jueves_solo_lunes_estabilidad_2_dias_no_alcanza_y_sugiere_domingo`, `test_no_alcanza_ningun_dia_de_la_semana` |
-| RF-4.6 | Si el listado no trae estabilidad, se muestra una sola vez "Estabilidad según el listado: Dato no disponible. Consultar con el laboratorio.". Si la trae pero no sirve para decidir (por ejemplo, solo congelada), se advierte además que no se pudo revisar | Must | P: `test_sin_estabilidad_es_dato_no_disponible`, `test_sin_estabilidad_queda_vacia`; `test_interfaz.py`: `test_derivado_sin_estabilidad_muestra_un_solo_aviso`, `test_estabilidad_que_no_sirve_para_decidir_mantiene_el_aviso` |
+| RF-4.6 | Si el listado no trae estabilidad, se muestra una sola vez "Estabilidad según el listado: Dato no disponible. Consultar con el laboratorio.". Si la trae pero no sirve para decidir (por ejemplo, solo congelada), la misma línea muestra el texto del listado y termina con "Consultar con el laboratorio." (la estabilidad nunca aparece dos veces) | Must | P: `test_sin_estabilidad_es_dato_no_disponible`, `test_sin_estabilidad_queda_vacia`; `test_interfaz.py`: `test_derivado_sin_estabilidad_muestra_un_solo_aviso`, `test_estabilidad_no_revisable_pide_consultar_en_una_sola_linea` |
 | RF-4.7 | "Según demanda" no tiene veredicto: se muestra el tiempo de respuesta y se pide consultar con el laboratorio | Must | P: `test_segun_demanda`, `test_segun_demanda_no_da_veredicto_y_muestra_tiempo_de_respuesta` |
 | RF-4.8 | Solo se revisan los exámenes que se derivan | Must | P: `test_solo_se_revisan_los_que_se_derivan`; `test_interfaz.py`: `test_examen_del_recinto_no_lleva_etiqueta_de_estabilidad` |
 
@@ -155,7 +155,7 @@ comprobar.
 | RNF-7 | Confidencialidad del listado | El listado real, la base, la auditoría y el `.env` no están en Git; al importar, la consola muestra solo conteos | Must | I: `.gitignore` y `git ls-files` (ningún archivo de `data/` ni `.env`). P: `test_importador.py`: `test_comando_importar_muestra_solo_conteos` |
 | RNF-8 | Seguridad clínica | La app nunca inventa tubos, estabilidades ni días de proceso; si falta un dato muestra "dato no disponible" y advierte | Must | P: pruebas de RF-2.5, RF-3.10, RF-4.1, RF-4.3 y RF-4.6. V: casos reales con el tecnólogo médico (HU-20) |
 | RNF-9 | Mantenibilidad | La lógica vive en clases del dominio; las rutas no escriben SQL; el importador está separado y acepta otro formato de listado sin cambiar el resto | Should | P: `test_clases.py`: `test_el_importador_acepta_otro_lector`, `test_repositorio_entrega_examenes_en_el_orden_pedido`. I: `app/rutas.py` sin SQL; diagramas de `docs/uml/` coinciden con `app/` |
-| RNF-10 | Calidad continua | Todas las pruebas automáticas pasan en cada `push` a GitHub | Must | P: GitHub Actions (`.github/workflows/pruebas.yml`) |
+| RNF-10 | Calidad continua | Todas las pruebas automáticas pasan y flake8 no da avisos (reglas por defecto, líneas de máximo 79 caracteres) en cada `push` a GitHub | Must | P: GitHub Actions (`.github/workflows/pruebas.yml`) |
 | RNF-11 | Plataforma | Corre en un computador con Python 3 y un navegador de escritorio; solo pacientes adultos | Must | D: instalación con los comandos del `README.md` |
 | RNF-12 | Navegación estable | La cabecera (logo, pasos y franja) es igual en las tres pantallas: misma altura (74 px) y misma posición de los pasos, con o sin el botón "Cambiar"; el ingreso y la búsqueda caben sin desplazamiento en una pantalla de 1366 × 768 | Should | P: `test_interfaz.py`: `test_cabecera_con_logo_y_franja_de_tapas_en_todas_las_pantallas`. D: medición en el navegador |
 
@@ -208,13 +208,12 @@ Datos del listado actual: 615 exámenes (173 se procesan en el recinto y 442 se 
 ## 9. Pendientes
 
 Con el tecnólogo médico:
-- Completar los 41 exámenes de `data/tubos_por_revisar.csv` (guía en `docs/tabla_de_tubos.md`). Mientras tanto aparecen como "Tubo: dato no disponible".
+- Completar los 41 exámenes de `data/tubos_por_revisar.csv` (guía en `docs/tabla_de_tubos.md`). Queda pendiente: el listado técnico está en actualización por el laboratorio. Mientras tanto aparecen como "Tubo: dato no disponible".
 - Revisar el reporte de revisión, en especial los derivados sin estabilidad en el listado.
 - Probar la aplicación con casos reales y validar los resultados de agrupación, orden y estabilidad.
 - Decidir si se quiere una lista de exámenes frecuentes que aparezcan primero en el buscador.
 
 Del equipo:
-- Revisar la impresión del resumen.
 - Configurar el servidor de correo real en `.env` cuando corresponda.
 
 Para un uso real (fuera de la versión 1): inicio de sesión, instalación en un servidor del hospital, respaldos y un procedimiento para actualizar el listado. Todo esto está descrito en el plan de despliegue y operación (`docs/despliegue.md`).

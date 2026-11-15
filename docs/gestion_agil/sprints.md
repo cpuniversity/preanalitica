@@ -26,7 +26,7 @@ quedaron guardadas en un mismo commit (por ejemplo, I1 e I2).
 | I5 | 01/11 | Auditoría | HU-15, HU-16 | 8 | 223 | `8125a3c`, `88613ef` |
 | I6 | 01/11 | Pulido de interfaz y documentación | HU-10 | 2 | 235 | `07e2b55`, `cf7eea3`, `6288b71` |
 | I7 | 02/11 | Diseño orientado a objetos y UML | HU-17 | 8 | 245 | `ab71eeb`, `9761577` |
-| **I8** | **por definir** | **Entregables finales y validación** | HU-18 a HU-23 | 11 | — | — |
+| **I8** | **02/11 al 26/11** | **Entregables finales y validación** | HU-18 a HU-23 | 11 | 260 | `00e7df1` a `0b098a1` y siguientes |
 
 ## Avance (burndown)
 
@@ -74,20 +74,24 @@ que espera la decisión del tecnólogo médico.
 - **Hecho:** la lógica pasó a clases del dominio con patrones (Repositorio, Strategy) y SOLID; diagramas de casos de uso, secuencia y clases; matriz de trazabilidad.
 - **Verificación:** las pruebas anteriores siguen pasando y 40 pantallas comparadas con la versión anterior son idénticas.
 
-## Próxima iteración · I8 (planificada)
+## Iteración I8 · Entregables finales (planificada y en seguimiento)
 
-**Objetivo:** completar los entregables finales de la pauta y validar la app con el tecnólogo médico.
-**Fecha límite:** [fecha de la EVA4]
+**Objetivo:** completar los entregables finales de la pauta y dejar la app lista para la presentación.
+**Fecha límite:** jueves 26 de noviembre de 2026 (entrega y presentación del Proyecto ACI).
+**Equipo:** Jared Estrada, Scherezade Huancapaza y Camila Pastene.
 
 | Historia o tarea | Responsable | Estado |
 |---|---|---|
-| HU-18 CI con GitHub Actions y plan de pruebas | [por asignar] | ✔ Hecha (02/11) |
-| HU-19 Plan de despliegue y operación | [por asignar] | ✔ Hecha (02/11) |
-| HU-20 Completar los 41 tubos y validar con casos reales | Tecnólogo médico | Por hacer |
-| Nueva imagen: logo y franja en la cabecera, bienvenida en el ingreso, campos y pasos sin saltos | Equipo | ✔ Hecha (07/11) |
-| HU-22 Configurar el correo real | [por asignar] | Por hacer |
-| HU-23 Cierre del proyecto y presentación final | Todo el equipo | En curso: borrador en `docs/cierre.md`; faltan conclusiones y presentación |
-| Mostrar el avance al ayudante e incorporar su retroalimentación | Todo el equipo | Por hacer |
+| HU-18 CI con GitHub Actions y plan de pruebas | Jared Estrada, Scherezade Huancapaza y Camila Pastene | ✔ Hecha (02/11) |
+| HU-19 Plan de despliegue y operación | Jared Estrada, Scherezade Huancapaza y Camila Pastene | ✔ Hecha (02/11) |
+| HU-20 Completar los 41 tubos y validar con casos reales | Tecnólogo médico | Pendiente: el listado está en actualización por el laboratorio |
+| Nueva imagen: logo y franja en la cabecera, bienvenida en el ingreso, campos y pasos sin saltos | Jared Estrada, Scherezade Huancapaza y Camila Pastene | ✔ Hecha (07/11) |
+| Estabilidad de los derivados en una sola línea | Jared Estrada, Scherezade Huancapaza y Camila Pastene | ✔ Hecha (14/11) |
+| Estilo del código: flake8 sin avisos, también en GitHub Actions | Jared Estrada, Scherezade Huancapaza y Camila Pastene | ✔ Hecha (14/11) |
+| HU-22 Configurar el correo real | Jared Estrada, Scherezade Huancapaza y Camila Pastene | Por hacer (opcional para la entrega) |
+| HU-23 Cierre del proyecto, informe y presentación final | Jared Estrada, Scherezade Huancapaza y Camila Pastene | ✔ Hecha (14/11): `docs/cierre.md`, informe y presentación |
+| Mostrar el avance al ayudante e incorporar su retroalimentación | Jared Estrada, Scherezade Huancapaza y Camila Pastene | Por hacer |
+| Entrega y presentación del Proyecto ACI | Jared Estrada, Scherezade Huancapaza y Camila Pastene | Jueves 26/11 |
 
 **Forma de trabajo en I8:** los cambios se hacen directamente en `main`, uno por
 commit, con las pruebas automáticas pasando antes de cada commit.

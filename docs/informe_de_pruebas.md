@@ -6,12 +6,13 @@ Resultado de las pruebas descritas en el [plan de pruebas](plan_de_pruebas.md).
 
 | | |
 |---|---|
-| Fecha | 2 de noviembre de 2026 |
+| Fecha | 14 de noviembre de 2026 |
 | Pruebas automáticas | **260** |
 | Pasan | **260 (100 %)** |
 | Fallan | 0 |
 | Duración | 5 a 7 segundos |
-| Integración continua | GitHub Actions corre las pruebas en cada `push` (ver sección 3) |
+| Estilo del código | flake8 sin avisos (reglas por defecto, líneas de máximo 79 caracteres) |
+| Integración continua | GitHub Actions revisa flake8 y corre las pruebas en cada `push` (ver sección 3) |
 
 ## 2. Resultados por archivo
 
@@ -43,6 +44,7 @@ nombres válidos en `test_ingreso.py`); `pytest` cuenta cada caso por separado.
 | Computador del equipo, después de simplificar la pantalla de tubos (2 pruebas nuevas) | Windows 11 | 3.13.2 | ✔ 257 pasan |
 | Computador del equipo, después de excluir la leyenda de laboratorios del listado (1 prueba nueva) | Windows 11 | 3.13.2 | ✔ 258 pasan |
 | Computador del equipo, después de la nueva cabecera y la bienvenida del ingreso (2 pruebas nuevas) | Windows 11 | 3.13.2 | ✔ 260 pasan |
+| Computador del equipo, después de la estabilidad en una línea y de corregir el estilo con flake8 | Windows 11 | 3.13.2 | ✔ 260 pasan · flake8: 0 avisos |
 
 Desde entonces, cada `push` queda con su propia ejecución en la pestaña
 [Actions](https://github.com/cpuniversity/preanalitica/actions/workflows/pruebas.yml)
@@ -76,6 +78,8 @@ para que no vuelva a pasar.
 | I8 | Las filas de la leyenda de laboratorios ("DERIVACION 1", "2"…) se cargaban como exámenes | `test_leyenda_de_laboratorios_no_se_carga_como_examen` |
 | I8 | Al seleccionar un campo se veía una doble línea (borde más contorno separado) | Revisión en el navegador: ahora un solo borde con halo |
 | I8 | Los pasos de la cabecera se movían al pasar de Identificación a Exámenes (negrita, barra de desplazamiento y botón "Cambiar") | `test_cabecera_con_logo_y_franja_de_tapas_en_todas_las_pantallas` y medición en el navegador: misma posición en las tres pantallas |
+| I8 | La estabilidad de algunos derivados aparecía dos veces (un recuadro y la línea del listado) | `test_estabilidad_no_revisable_pide_consultar_en_una_sola_linea` |
+| I8 | flake8, aplicado al final, marcó 521 avisos de estilo (casi todos líneas largas) | Se corrigieron todos y GitHub Actions corre flake8 en cada `push` |
 
 ## 6. Lo que falta
 
