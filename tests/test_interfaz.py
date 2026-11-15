@@ -163,14 +163,15 @@ def test_otras_muestras_sin_subtitulo(cliente_con_examenes):
     assert "No son de sangre" not in html
 
 
-def test_estabilidad_que_no_sirve_para_decidir_mantiene_el_aviso(ruta_base, cliente_con_examenes):
+def test_estabilidad_que_no_sirve_para_decidir_pide_consultar_en_una_sola_linea(ruta_base, cliente_con_examenes):
     cargar_examen(ruta_base, "CONGELADO PRUEBA", "amarillo", laboratorio="Laboratorio Externo Prueba",
                   dias_proceso="LU A DO", estabilidad="Congelado 1 mes")
     agregar(cliente_con_examenes, "congelado prueba")
     html = cliente_con_examenes.get("/tubos").get_data(as_text=True)
-    # El listado trae estabilidad, pero solo congelada: la app advierte que no pudo revisarla
-    assert "<strong>Estabilidad: dato no disponible</strong>" in html
-    assert "Congelado 1 mes" in html
+    # El listado trae estabilidad, pero solo congelada: la app no pudo revisarla y lo advierte
+    # en la misma línea del listado, sin un recuadro aparte que repita la estabilidad
+    assert "Congelado 1 mes. Consultar con el laboratorio.</div>" in html
+    assert "<strong>Estabilidad: dato no disponible</strong>" not in html
 
 
 # ---------- Sin punto final ----------

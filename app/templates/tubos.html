@@ -214,15 +214,13 @@
             {% elif d.resultado == "sin_dia" %}
               <p class="veredicto veredicto-aviso"><strong>Día de proceso: dato no disponible</strong>.
                 Consultar con el laboratorio</p>
-            {% elif d.estabilidad_texto %}
-              {# El listado trae estabilidad, pero no sirve para decidir (por ejemplo, solo congelada) #}
-              <p class="veredicto veredicto-aviso"><strong>Estabilidad: dato no disponible</strong>.
-                Consultar con el laboratorio</p>
             {% endif %}
 
-            {# Si el listado no trae estabilidad, esta línea es el aviso: no se repite arriba #}
+            {# Una sola línea de estabilidad. Si la app no pudo revisarla (no está en el listado,
+               o lo que dice no sirve para decidir, por ejemplo solo congelada), se pide consultar #}
             <div class="frase-listado"><strong>Estabilidad según el listado:</strong>
-              {{ d.estabilidad_texto|sin_punto or "Dato no disponible. Consultar con el laboratorio" }}.</div>
+              {% if d.estabilidad_texto %}{{ d.estabilidad_texto|sin_punto }}.{% else %}Dato no disponible.{% endif %}
+              {%- if d.resultado == "no_disponible" %} Consultar con el laboratorio.{% endif %}</div>
           </div>
         </li>
       {% endfor %}
