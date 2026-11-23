@@ -163,7 +163,7 @@ Funcionalidades para versiones siguientes (fuera de la versión 1):
 ## 8. Conclusiones
 
 **Se cumplió el objetivo del producto para la versión 1.** Preanalítica entrega
-a la enfermera, en una sola pantalla y sin datos del paciente, los tubos que
+a la enfermera, en una sola consulta y sin datos del paciente, los tubos que
 debe usar, el orden de extracción, qué exámenes se derivan y si la muestra
 derivada alcanzará a procesarse. Todo sale del listado técnico real del
 laboratorio y está cubierto por 260 pruebas automáticas que corren en cada

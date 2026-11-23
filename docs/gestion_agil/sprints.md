@@ -89,7 +89,7 @@ que espera la decisión del tecnólogo médico.
 | Estabilidad de los derivados en una sola línea | Jared Estrada, Scherezade Huancapaza y Camila Pastene | ✔ Hecha (14/11) |
 | Estilo del código: flake8 sin avisos, también en GitHub Actions | Jared Estrada, Scherezade Huancapaza y Camila Pastene | ✔ Hecha (14/11) |
 | HU-22 Configurar el correo real | Jared Estrada, Scherezade Huancapaza y Camila Pastene | Por hacer (opcional para la entrega) |
-| HU-23 Cierre del proyecto, informe y presentación final | Jared Estrada, Scherezade Huancapaza y Camila Pastene | ✔ Hecha (14/11): `docs/cierre.md`, informe y presentación |
+| HU-23 Cierre del proyecto, informe y presentación final | Jared Estrada, Scherezade Huancapaza y Camila Pastene | En curso: cierre, informe y presentación listos (14/11); se presenta el 26/11 |
 | Mostrar el avance al ayudante e incorporar su retroalimentación | Jared Estrada, Scherezade Huancapaza y Camila Pastene | Por hacer |
 | Entrega y presentación del Proyecto ACI | Jared Estrada, Scherezade Huancapaza y Camila Pastene | Jueves 26/11 |
 
