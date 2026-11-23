@@ -32,7 +32,7 @@ integración continua y validación.
 | Navegador | Cualquier navegador actual de escritorio en los computadores de enfermería | La letra IBM Plex Sans se descarga de Google Fonts; si la red la bloquea, se ve con la letra del sistema |
 | Correo | Una cuenta del servidor de correo del hospital para enviar la auditoría | Datos en `.env` (`SMTP_SERVIDOR`, `SMTP_USUARIO`, `SMTP_CLAVE`) |
 | Espacio para respaldos | Una carpeta en otro equipo o unidad de red **[por definir]** | Ver sección 5 |
-| Personas | Responsable técnico de la app y tecnólogo médico responsable del listado **[por definir]** | Ver sección 8 |
+| Personas | Responsable técnico, de calidad y del listado (el equipo durante la puesta en marcha), tecnólogo médico, jefatura e informática del hospital | Ver sección 8 |
 
 ## 3. Requisitos antes de usarla en el hospital
 
@@ -166,12 +166,24 @@ instala como una versión nueva.
 
 ## 8. Responsables
 
-| Rol | Responsabilidad | Persona |
-|---|---|---|
-| Responsable técnico | Instalación, versiones, respaldos, monitoreo | [por definir] |
-| Tecnólogo médico responsable | Reglas clínicas, listado técnico, tabla de tubos, validación de cada versión | [por definir] |
-| Jefatura de laboratorio y de sección | Recibir y revisar la auditoría semanal; aprobar el paso a producción | [por definir] |
-| Informática del hospital | Servidor, red, correo, zona horaria y acceso | [por definir] |
+Cada tarea del plan tiene un responsable con nombre. Durante la puesta en
+marcha (instalar la primera versión, validarla y acompañar las primeras
+semanas) responde el equipo; después, en la operación diaria, cada tarea pasa
+al área del hospital que corresponde.
+
+| Rol | Responsabilidad | Puesta en marcha (equipo) | Operación diaria (hospital) |
+|---|---|---|---|
+| Responsable técnico | Instalación, versiones con etiqueta, respaldos, reversa y monitoreo de la app | Jared Estrada | Informática del hospital |
+| Responsable de calidad | Que cada versión pase flake8 y todas las pruebas en GitHub Actions antes de instalarse; revisar que llegue la auditoría semanal | Scherezade Huancapaza | Informática del hospital |
+| Responsable del listado y la validación | Coordinar con el tecnólogo médico la importación del listado, la tabla de tubos y la validación de cada versión con casos reales | Camila Pastene | Tecnólogo médico del laboratorio |
+| Tecnólogo médico | Reglas clínicas, listado técnico, tabla de tubos y aprobación clínica de cada versión | Tecnólogo médico del laboratorio | Tecnólogo médico del laboratorio |
+| Jefatura de laboratorio y de sección | Recibir y revisar la auditoría semanal; aprobar el paso a producción | Jefatura de laboratorio y de sección | Jefatura de laboratorio y de sección |
+| Informática del hospital | Servidor, red, correo, zona horaria y acceso | Informática del hospital | Informática del hospital |
+
+Ninguna versión se instala sin dos aprobaciones: la del tecnólogo médico
+(validación clínica) y la de la jefatura (paso a producción). Si una versión
+falla, el responsable técnico decide la reversa (sección 4, "Volver atrás") y
+avisa a la jefatura y al tecnólogo médico.
 
 ## 9. Impacto en las usuarias
 
