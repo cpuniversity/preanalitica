@@ -17,7 +17,8 @@ python -m venv venv
 venv\Scripts\activate                              # Windows
 source venv/bin/activate                           # Mac / Linux
 pip install -r requirements.txt
-copy .env.example .env                             # configuración del correo (una vez)
+copy .env.example .env                             # configuración del correo (una vez, Windows)
+cp .env.example .env                               # lo mismo en Mac / Linux
 flask --app app importar data/listado_tecnico.csv  # carga el listado en la base
 flask --app app run --debug                        # abre http://127.0.0.1:5000
 pytest                                             # corre las pruebas automáticas

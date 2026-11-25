@@ -99,15 +99,15 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant Reloj as revisar_envio_automatico
+    participant Revision as revisar_envio_automatico
     participant Auditoria
     participant Enviador as EnviadorDeCorreo
     participant Base as Base de datos
     actor Jefatura
 
-    Note over Reloj: en cada consulta, desde el lunes,<br>si la semana anterior no se ha enviado
-    Reloj->>Reloj: crear_enviador(config, carpeta)
-    Reloj->>Auditoria: envio_semanal(hoy, enviador, carpeta)
+    Note over Revision: en cada consulta, desde el lunes,<br>si la semana anterior no se ha enviado
+    Revision->>Revision: crear_enviador(config, carpeta)
+    Revision->>Auditoria: envio_semanal(hoy, enviador, carpeta)
     Auditoria->>Auditoria: exportar(hasta, ruta)
     Auditoria->>Enviador: enviar(asunto, cuerpo, adjunto)
     alt CorreoSMTP (modo real)

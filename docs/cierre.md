@@ -88,7 +88,7 @@ impacto en el diseño fueron:
 | Diseño orientado a objetos con patrones Repositorio y Strategy | Lo pide la pauta y separa responsabilidades (ver [arquitectura.md](arquitectura.md)) |
 | Una funcionalidad a la vez, con pruebas antes de cada commit | Cada iteración dejó algo que funciona y está probado |
 | Integración continua con pytest y flake8 | Cada `push` revisa que las pruebas pasen y que el código no tenga avisos de estilo |
-| Trabajo directo en `main`, con un solo Pull Request | Decisión del equipo; las pruebas en GitHub Actions sirvieron como red de seguridad en lugar de la revisión previa |
+| Trabajo principalmente en `main`; ramas y Pull Requests para la gestión ágil (#1) y los cambios de la entrega final (#2 y #3) | Decisión del equipo; las pruebas en GitHub Actions sirvieron como red de seguridad en lugar de la revisión previa |
 | Desarrollo asistido por Claude Code | Aceleró la programación; las reglas clínicas siempre las definió el tecnólogo médico, y Claude Code aparece como coautor en los commits |
 
 ## 4. Dificultades y cómo se resolvieron

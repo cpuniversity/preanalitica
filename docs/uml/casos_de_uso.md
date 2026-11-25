@@ -11,7 +11,7 @@ flowchart LR
     enfermera((Enfermera))
     tecnologo((Tecnólogo<br>médico))
     jefatura((Jefatura de<br>laboratorio y sección))
-    reloj((Reloj<br>del sistema))
+    tecnico((Responsable<br>técnico))
 
     subgraph sistema [Preanalítica]
         CU01([CU-01 Identificarse])
@@ -31,12 +31,12 @@ flowchart LR
     enfermera --- CU05
     tecnologo --- CU06
     tecnologo --- CU07
-    reloj --- CU08
+    tecnico --- CU08
     CU08 --- jefatura
 
     CU03 -.->|include| CU04
     CU03 -.->|include| CU09
-    CU02 -.->|include| CU01
+    CU08 -.->|extend| CU01
     CU05 -.->|extend| CU03
     CU07 -.->|extend| CU06
 ```
@@ -118,11 +118,15 @@ flowchart LR
 
 ### CU-08 Enviar auditoría semanal
 
-- **Actor principal:** reloj del sistema. **Actor secundario:** jefatura de laboratorio y de sección.
+- **Actor principal:** no hay un reloj: el envío lo dispara la primera consulta a la app desde el lunes
+  (por eso extiende a CU-01), o el responsable técnico con el comando manual. **Actor secundario:**
+  jefatura de laboratorio y de sección.
 - **Requisito:** RF-6.
 - **Precondición:** es lunes o después, y la semana anterior todavía no se ha enviado.
 - **Flujo principal:**
-  1. Al recibir una consulta, el sistema revisa si corresponde enviar la auditoría.
+  1. Al recibir cualquier consulta (por ejemplo, una enfermera que se identifica), el sistema revisa
+     si corresponde enviar la auditoría. Si el lunes nadie usa la app, sale con la primera consulta
+     siguiente.
   2. En segundo plano, exporta a un CSV el historial anterior a esta semana.
   3. Envía el CSV por correo a la jefatura.
   4. Borra de la base el historial enviado y anota la semana como enviada.

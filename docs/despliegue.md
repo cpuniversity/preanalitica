@@ -128,7 +128,7 @@ restaurar el respaldo de la base del paso 1 y reiniciar la app.
 | Qué se vigila | Cómo | Quién |
 |---|---|---|
 | La app responde | Abrir la pantalla de ingreso al inicio de cada turno, y una revisión automática que la consulte cada 5 minutos y avise por correo al responsable técnico si no responde **(propuesta, con informática)** | Responsable técnico |
-| Llegó la auditoría semanal | La jefatura recibe el correo cada lunes. Si no llega, avisar: la app no borra nada si el envío falla y reintenta cada hora | Jefatura de laboratorio |
+| Llegó la auditoría semanal | El correo sale con la primera consulta a la app desde el lunes; si el lunes nadie la usa, sale con la siguiente. Si el martes no ha llegado, avisar: la app no borra nada si el envío falla y reintenta cada hora | Jefatura de laboratorio |
 | Errores de la app | La app escribe sus avisos (por ejemplo, "No se pudo enviar la auditoría semanal") en su registro. En producción se guardaría en un archivo y se revisaría cada semana | Responsable técnico |
 | Espacio en disco | Que los respaldos y los CSV de auditoría no llenen el disco | Responsable técnico |
 | Calidad del código | GitHub Actions marca cada `push` con ✔ o ✘ | Equipo de desarrollo |
