@@ -8,8 +8,9 @@ usuarias (HU-19).
 **Es un plan, no algo implementado.** La versión 1 es un prototipo que corre en
 un computador. La instalación en un servidor del hospital y el inicio de sesión
 están fuera de la versión 1 (ver `requisitos.md`, sección 6). Lo marcado como
-**[por definir]** lo deben decidir la jefatura de laboratorio, el tecnólogo
-médico y el área de informática del hospital.
+**(propuesta)** es lo que sugiere el equipo; antes de producción lo deben
+confirmar la jefatura de laboratorio, el tecnólogo médico y el área de
+informática del hospital.
 
 ## 1. Ambientes
 
@@ -18,7 +19,7 @@ médico y el área de informática del hospital.
 | **Desarrollo** | Programar y probar cada cambio | Computador del equipo, `flask --app app run --debug` | Listado real en `data/` (fuera de Git) | Modo prueba: se guarda como `.eml` en `data/` |
 | **Integración continua** | Revisar el estilo con flake8 y correr todas las pruebas en cada `push` | GitHub Actions (Linux) | Solo exámenes inventados | Nunca se envía |
 | **Validación** | Que el tecnólogo médico revise casos reales antes de cada versión (HU-20) | Un computador del laboratorio, con la misma versión que irá a producción | Listado real vigente | Modo prueba |
-| **Producción** (propuesta) | Uso diario de enfermería | Servidor de la red interna del hospital **[por definir]** | Listado real validado | Modo real, con el servidor de correo del hospital |
+| **Producción** (propuesta) | Uso diario de enfermería | Servidor de la red interna del hospital, asignado por informática **(propuesta)** | Listado real validado | Modo real, con el servidor de correo del hospital |
 
 Producción nunca se usa para probar: todo cambio pasa antes por desarrollo,
 integración continua y validación.
@@ -31,8 +32,8 @@ integración continua y validación.
 | Red | Accesible solo desde la red interna del hospital | Sin inicio de sesión, no debe quedar expuesta a internet |
 | Navegador | Cualquier navegador actual de escritorio en los computadores de enfermería | La letra IBM Plex Sans se descarga de Google Fonts; si la red la bloquea, se ve con la letra del sistema |
 | Correo | Una cuenta del servidor de correo del hospital para enviar la auditoría | Datos en `.env` (`SMTP_SERVIDOR`, `SMTP_USUARIO`, `SMTP_CLAVE`) |
-| Espacio para respaldos | Una carpeta en otro equipo o unidad de red **[por definir]** | Ver sección 5 |
-| Personas | Responsable técnico de la app y tecnólogo médico responsable del listado **[por definir]** | Ver sección 8 |
+| Espacio para respaldos | Una carpeta en la unidad de red del laboratorio, en un equipo distinto del servidor **(propuesta)** | Ver sección 5 |
+| Personas | Responsable técnico, de calidad y del listado (el equipo durante la puesta en marcha), tecnólogo médico, jefatura e informática del hospital | Ver sección 8 |
 
 ## 3. Requisitos antes de usarla en el hospital
 
@@ -85,8 +86,9 @@ la app con el servidor web de producción.
   está instalado.
 - **Validación antes de instalar.** El tecnólogo médico revisa la versión
   nueva en el ambiente de validación con casos reales.
-- **Instalación fuera del horario de más uso** **[por definir con
-  enfermería]**, avisando antes a las usuarias.
+- **Instalación fuera del horario de más uso:** un día hábil entre las 14:00
+  y las 16:00, avisando a enfermería con un día de anticipación **(propuesta,
+  a confirmar con enfermería)**.
 
 ### Pasos para instalar una versión nueva
 
@@ -114,8 +116,10 @@ restaurar el respaldo de la base del paso 1 y reiniciar la app.
 - El código no necesita respaldo aparte: está en GitHub.
 - La base SQLite se debe copiar con la herramienta de respaldo de SQLite (o
   con la app detenida), no copiando el archivo mientras se escribe.
-- Los respaldos se guardan en otro equipo o unidad de red **[por definir]** y
-  se conservan **[plazo por definir con la jefatura]**.
+- Los respaldos se guardan en la carpeta de la unidad de red del laboratorio,
+  fuera del servidor **(propuesta)**. Se conservan los respaldos diarios de
+  los últimos 30 días y los CSV de auditoría por un año **(propuesta, a
+  confirmar con la jefatura)**.
 - Una vez al mes se prueba restaurar un respaldo en el ambiente de validación:
   un respaldo que nunca se probó no se sabe si sirve.
 
@@ -123,12 +127,12 @@ restaurar el respaldo de la base del paso 1 y reiniciar la app.
 
 | Qué se vigila | Cómo | Quién |
 |---|---|---|
-| La app responde | Abrir la pantalla de ingreso al inicio de cada turno, o una revisión automática que la consulte cada pocos minutos **[por definir]** | Responsable técnico |
+| La app responde | Abrir la pantalla de ingreso al inicio de cada turno, y una revisión automática que la consulte cada 5 minutos y avise por correo al responsable técnico si no responde **(propuesta, con informática)** | Responsable técnico |
 | Llegó la auditoría semanal | La jefatura recibe el correo cada lunes. Si no llega, avisar: la app no borra nada si el envío falla y reintenta cada hora | Jefatura de laboratorio |
 | Errores de la app | La app escribe sus avisos (por ejemplo, "No se pudo enviar la auditoría semanal") en su registro. En producción se guardaría en un archivo y se revisaría cada semana | Responsable técnico |
 | Espacio en disco | Que los respaldos y los CSV de auditoría no llenen el disco | Responsable técnico |
 | Calidad del código | GitHub Actions marca cada `push` con ✔ o ✘ | Equipo de desarrollo |
-| Reclamos de enfermería | Un canal simple para avisar si un resultado parece incorrecto **[por definir]** | Tecnólogo médico |
+| Reclamos de enfermería | Avisar al tecnólogo médico de turno por el canal interno del laboratorio si un resultado parece incorrecto; él lo registra y lo revisa con el equipo **(propuesta)** | Tecnólogo médico |
 
 El registro de la app nunca debe mostrar el contenido del listado ni datos de
 pacientes (la app no los tiene).
@@ -166,12 +170,24 @@ instala como una versión nueva.
 
 ## 8. Responsables
 
-| Rol | Responsabilidad | Persona |
-|---|---|---|
-| Responsable técnico | Instalación, versiones, respaldos, monitoreo | [por definir] |
-| Tecnólogo médico responsable | Reglas clínicas, listado técnico, tabla de tubos, validación de cada versión | [por definir] |
-| Jefatura de laboratorio y de sección | Recibir y revisar la auditoría semanal; aprobar el paso a producción | [por definir] |
-| Informática del hospital | Servidor, red, correo, zona horaria y acceso | [por definir] |
+Cada tarea del plan tiene un responsable con nombre. Durante la puesta en
+marcha (instalar la primera versión, validarla y acompañar las primeras
+semanas) responde el equipo; después, en la operación diaria, cada tarea pasa
+al área del hospital que corresponde.
+
+| Rol | Responsabilidad | Puesta en marcha (equipo) | Operación diaria (hospital) |
+|---|---|---|---|
+| Responsable técnico | Instalación, versiones con etiqueta, respaldos, reversa y monitoreo de la app | Jared Estrada | Informática del hospital |
+| Responsable de calidad | Que cada versión pase flake8 y todas las pruebas en GitHub Actions antes de instalarse; revisar que llegue la auditoría semanal | Scherezade Huancapaza | Informática del hospital |
+| Responsable del listado y la validación | Coordinar con el tecnólogo médico la importación del listado, la tabla de tubos y la validación de cada versión con casos reales | Camila Pastene | Tecnólogo médico del laboratorio |
+| Tecnólogo médico | Reglas clínicas, listado técnico, tabla de tubos y aprobación clínica de cada versión | Tecnólogo médico del laboratorio | Tecnólogo médico del laboratorio |
+| Jefatura de laboratorio y de sección | Recibir y revisar la auditoría semanal; aprobar el paso a producción | Jefatura de laboratorio y de sección | Jefatura de laboratorio y de sección |
+| Informática del hospital | Servidor, red, correo, zona horaria y acceso | Informática del hospital | Informática del hospital |
+
+Ninguna versión se instala sin dos aprobaciones: la del tecnólogo médico
+(validación clínica) y la de la jefatura (paso a producción). Si una versión
+falla, el responsable técnico decide la reversa (sección 4, "Volver atrás") y
+avisa a la jefatura y al tecnólogo médico.
 
 ## 9. Impacto en las usuarias
 
@@ -179,9 +195,9 @@ instala como una versión nueva.
 Bastaría una demostración corta en cada servicio y una hoja con los tres
 pasos (identificarse, buscar los exámenes, ver los tubos).
 
-**Puesta en marcha gradual.** Se propone empezar con un solo servicio
-**[por definir]** durante algunas semanas, recoger comentarios y corregir antes
-de extenderla al resto.
+**Puesta en marcha gradual.** Se propone empezar con un solo servicio de
+pacientes adultos, elegido por la jefatura **(propuesta)**, durante cuatro
+semanas: recoger comentarios, corregir y recién después extenderla al resto.
 
 **Qué cambia para la enfermera.** Deja de buscar en el listado técnico cada
 examen: ve los tubos en orden, los avisos de ayuno y luz, y si la muestra
